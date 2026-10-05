@@ -5,135 +5,59 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Abyssal Salvage - Deep Sea Diver</title>
   <style>
-    * {
-      box-sizing: border-box;
-      user-select: none;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
     body {
-      background-color: #030811;
-      color: #e0f8ff;
+      background-color: #030811; color: #e0f8ff;
       font-family: 'Courier New', Courier, monospace;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; overflow: hidden;
     }
     #game-container {
-      position: relative;
-      width: 960px;
-      height: 600px;
-      border: 4px solid #1a3b5c;
-      box-shadow: 0 0 30px rgba(0, 180, 255, 0.25);
-      background: #020c1b;
-      cursor: crosshair;
+      position: relative; width: 960px; height: 600px;
+      border: 4px solid #1a3b5c; box-shadow: 0 0 30px rgba(0, 180, 255, 0.25);
+      background: #020c1b; cursor: crosshair;
     }
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      image-rendering: pixelated;
-    }
-    /* Modal / UI overlays */
+    canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+    
     .ui-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(2, 10, 25, 0.92);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      padding: 30px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 10; padding: 30px;
     }
-    .hidden {
-      display: none !important;
-    }
-    h1 {
-      font-size: 28px;
-      color: #38ef7d;
-      text-shadow: 0 0 10px rgba(56, 239, 125, 0.6);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-    }
-    h2 {
-      font-size: 18px;
-      color: #00d2ff;
-      margin-bottom: 20px;
-    }
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: center;
-      max-width: 800px;
-      margin-top: 15px;
-    }
+    .hidden { display: none !important; }
+    h1 { font-size: 28px; color: #38ef7d; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px; }
+    h2 { font-size: 18px; color: #00d2ff; margin-bottom: 20px; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; max-width: 800px; margin-top: 15px; }
     button {
-      background: #0d223a;
-      border: 2px solid #00d2ff;
-      color: #e0f8ff;
-      padding: 10px 18px;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.2s;
+      background: #0d223a; border: 2px solid #00d2ff; color: #e0f8ff;
+      padding: 10px 18px; font-family: inherit; font-size: 14px; font-weight: bold;
+      cursor: pointer; transition: all 0.2s;
     }
-    button:hover:not(:disabled) {
-      background: #00d2ff;
-      color: #030811;
-      box-shadow: 0 0 15px #00d2ff;
-    }
-    button:disabled {
-      border-color: #455a64;
-      color: #546e7a;
-      cursor: not-allowed;
-    }
+    button:hover:not(:disabled) { background: #00d2ff; color: #030811; box-shadow: 0 0 15px #00d2ff; }
+    button:disabled { border-color: #455a64; color: #546e7a; cursor: not-allowed; }
+    
     .cert-card {
-      border: 4px double #ffd700;
-      padding: 24px;
-      text-align: center;
-      background: #051424;
-      max-width: 550px;
-      box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+      border: 4px double #ffd700; padding: 24px; text-align: center;
+      background: #051424; max-width: 550px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
     }
-    .cert-card h3 {
-      color: #ffd700;
-      font-size: 22px;
-      margin-bottom: 12px;
-      letter-spacing: 1px;
-    }
-    .cert-stats {
-      margin: 15px 0;
-      font-size: 14px;
-      line-height: 1.6;
-      color: #b0bec5;
-      text-align: left;
-    }
-    .shop-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
+    .cert-card h3 { color: #ffd700; font-size: 22px; margin-bottom: 12px; }
+    .cert-stats { margin: 15px 0; font-size: 14px; line-height: 1.6; color: #b0bec5; text-align: left; }
+    
+    .shop-wrapper {
       width: 100%;
       max-width: 700px;
+      max-height: 360px;
+      overflow-y: auto;
       margin-bottom: 20px;
+      padding-right: 10px;
     }
-    .shop-item {
-      background: #071a2e;
-      border: 1px solid #1a4971;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
+    .shop-wrapper::-webkit-scrollbar { width: 8px; }
+    .shop-wrapper::-webkit-scrollbar-track { background: rgba(7, 26, 46, 0.5); border-radius: 4px; }
+    .shop-wrapper::-webkit-scrollbar-thumb { background: #1a4971; border-radius: 4px; border: 1px solid #00d2ff; }
+    
+    .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; }
+    .shop-item { background: #071a2e; border: 1px solid #1a4971; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
   </style>
 </head>
 <body>
@@ -141,35 +65,34 @@
 <div id="game-container">
   <canvas id="gameCanvas" width="960" height="600"></canvas>
 
-  <!-- Title / Hub Overlay -->
   <div id="hubOverlay" class="ui-overlay">
     <h1>Abyssal Salvage</h1>
     <h2>Select Dive Expedition</h2>
     <div style="font-size: 14px; color: #ffd700; margin-bottom: 15px;" id="goldTracker">Salvage Vault: 0 Gold</div>
-    
-    <div class="btn-group" id="regionButtons">
-      <!-- Generated via JS -->
-    </div>
-
+    <div class="btn-group" id="regionButtons"></div>
     <div class="btn-group" style="margin-top: 30px;">
       <button id="openShopBtn">Submersible Armory & Shop</button>
-      <button id="resetDataBtn" style="border-color: #ff5252; color: #ff5252;">Reset Data</button>
+      <button id="resetDataBtn" style="border-color: #ff5252; color: #ff5252;">Wipe Career Data</button>
     </div>
   </div>
 
-  <!-- Shop Overlay -->
   <div id="shopOverlay" class="ui-overlay hidden">
     <h1>Submersible Outfitter</h1>
     <h2 id="shopGoldDisplay">Current Funds: 0 Gold</h2>
-    
-    <div class="shop-grid" id="shopItemsContainer">
-      <!-- Generated via JS -->
+    <div class="shop-wrapper">
+      <div class="shop-grid" id="shopItemsContainer"></div>
     </div>
-
     <button id="closeShopBtn">Return to Chart Room</button>
   </div>
 
-  <!-- Certification Modal -->
+  <div id="pauseOverlay" class="ui-overlay hidden" style="background: rgba(0,0,0,0.8);">
+    <h1>DIVE PAUSED</h1>
+    <div class="btn-group">
+      <button id="resumeBtn">Resume Dive</button>
+      <button id="abortBtn" style="border-color: #ff5252; color: #ff5252;">Abort to Surface (Extract with Loot)</button>
+    </div>
+  </div>
+
   <div id="certOverlay" class="ui-overlay hidden">
     <div class="cert-card">
       <h3 id="certTitle">Official Diver's Certification</h3>
@@ -183,203 +106,141 @@
 
 <script>
 /* -------------------------------------------------------------
- *  1. SOUND SYSTEM (WEB AUDIO API)
+ *  1. ASSET LOADER (GRITTY PIXEL ART PIPELINE)
  * ------------------------------------------------------------- */
-class SoundEngine {
-  constructor() {
-    this.ctx = null;
-  }
-  init() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+const ASSETS = {};
+const assetList = [
+  'diver', 'shark', 'angler', 'eel', 'squid', 'ghost', 'skeleton',
+  'rock_1', 'rock_2', 'rock_3', 'rock_4', 'coral_1', 'coral_2', 'coral_3', 'coral_4', 
+  'relic', 'treasure', 'o2', 'ammo', 'charge', 'ship', 'sea_mine', 'wreck'
+];
+
+assetList.forEach(name => {
+  const img = new Image();
+  img.src = `assets/${name}.png`;
+  img.onload = () => { ASSETS[name] = img; };
+});
+
+function drawSprite(name, x, y, w, h, fallbackFn) {
+  if (ASSETS[name] && ASSETS[name].complete && ASSETS[name].naturalWidth !== 0) {
+    if (fallbackFn && name !== 'wreck' && !name.includes('rock') && !name.includes('coral')) {
+      ctx.drawImage(ASSETS[name], x - w/2, y - h/2, w, h);
+    } else {
+      ctx.drawImage(ASSETS[name], x, y, w, h); 
     }
-  }
-  playShoot() {
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(600, this.ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.15);
-    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.15);
-  }
-  playExplode() {
-    if (!this.ctx) return;
-    const bufferSize = this.ctx.sampleRate * 0.5;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(300, this.ctx.currentTime);
-    filter.frequency.linearRampToValueAtTime(40, this.ctx.currentTime + 0.5);
-    const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.ctx.destination);
-    noise.start();
-  }
-  playCoin() {
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(987.77, this.ctx.currentTime); // B5
-    osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.08); // E6
-    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.25);
-  }
-  playDamage() {
-    if (!this.ctx) return;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(120, this.ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(40, this.ctx.currentTime + 0.2);
-    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.2);
+  } else if (fallbackFn) {
+    fallbackFn();
   }
 }
-const audio = new SoundEngine();
 
 /* -------------------------------------------------------------
- *  2. PERSISTENCE & REGION DEFINITIONS
+ *  2. DATA, ECONOMY & MAP DEFINITIONS
  * ------------------------------------------------------------- */
 const REGIONS = [
-  { id: 'caribbean', name: 'Caribbean Sea', diff: 'Easy', o2Rate: 0.05, enemyCount: 6, depthLimit: 2000 },
-  { id: 'indian', name: 'Indian Ocean', diff: 'Medium', o2Rate: 0.08, enemyCount: 9, depthLimit: 2500 },
-  { id: 'mediterranean', name: 'Mediterranean Sea', diff: 'Medium', o2Rate: 0.08, enemyCount: 10, depthLimit: 2500 },
-  { id: 'atlantic', name: 'Atlantic Ocean', diff: 'Hard', o2Rate: 0.12, enemyCount: 14, depthLimit: 3200 },
-  { id: 'pacific', name: 'Pacific Ocean', diff: 'Hard', o2Rate: 0.14, enemyCount: 16, depthLimit: 3600 }
+  { id: 'caribbean', name: 'Caribbean Sea', diff: 'Easy', o2Rate: 0.04, enemyCount: 8, style: 'horizontal', cols: 100, rows: 40, colorTop: '#00bcd4', colorBot: '#0277bd', darknessFactor: 0.1 },
+  { id: 'mediterranean', name: 'Mediterranean Sea', diff: 'Medium', o2Rate: 0.06, enemyCount: 12, style: 'balanced', cols: 60, rows: 60, colorTop: '#00838f', colorBot: '#004d40', darknessFactor: 0.4 },
+  { id: 'indian', name: 'Indian Ocean', diff: 'Medium', o2Rate: 0.07, enemyCount: 12, style: 'horizontal', cols: 80, rows: 50, colorTop: '#1565c0', colorBot: '#0d47a1', darknessFactor: 0.5 },
+  { id: 'atlantic', name: 'Atlantic Ocean', diff: 'Hard', o2Rate: 0.10, enemyCount: 18, style: 'vertical', cols: 35, rows: 120, colorTop: '#283593', colorBot: '#000000', darknessFactor: 1.5 },
+  { id: 'pacific', name: 'Pacific Ocean', diff: 'Hard', o2Rate: 0.12, enemyCount: 20, style: 'balanced', cols: 80, rows: 100, colorTop: '#1a237e', colorBot: '#000000', darknessFactor: 1.2 }
 ];
 
 const SHOP_ITEMS = [
-  { id: 'tank_upgrade', name: 'Reinforced O2 Reserve (+50% O2)', cost: 150, reqRelics: 6, unlocked: false },
-  { id: 'wetsuit_armor', name: 'Reinforced Kevlar Wetsuit (Double HP)', cost: 200, reqRelics: 12, unlocked: false },
-  { id: 'pneumatic_spear', name: 'Triton Multi-Harpoon (Triple Spear)', cost: 250, reqRelics: 18, unlocked: false },
-  { id: 'charge_capacity', name: 'Extended Depth Mine Pouch (+3 Mines)', cost: 180, reqRelics: 6, unlocked: false }
+  { id: 'tank_upgrade', name: 'Reinforced O2 Reserve (+50% O2)', costGold: 0, costRelics: 3, type: 'gear' },
+  { id: 'wetsuit_armor', name: 'Reinforced Kevlar Wetsuit (Double HP)', costGold: 0, costRelics: 4, type: 'gear' },
+  { id: 'pneumatic_spear', name: 'Triton Multi-Harpoon (Spread Shot)', costGold: 0, costRelics: 6, type: 'gear' },
+  { id: 'flashlight', name: 'Halogen Dive Light (See in the Dark)', costGold: 0, costRelics: 2, type: 'gear' },
+  { id: 'flashlight_2', name: 'Xenon Searchlight (Wider/Brighter)', costGold: 0, costRelics: 3, requires: 'flashlight', type: 'gear' },
+  { id: 'charge_capacity_1', name: 'Mine Pouch I (+3 Mines Capacity)', costGold: 0, costRelics: 2, type: 'gear' },
+  { id: 'charge_capacity_2', name: 'Mine Pouch II (+3 Mines Capacity)', costGold: 0, costRelics: 3, requires: 'charge_capacity_1', type: 'gear' },
+  { id: 'suit_pink', name: 'Neon Pink Wetsuit (Cosmetic)', costGold: 450, costRelics: 0, type: 'suit', color: '#e91e63' },
+  { id: 'suit_blue', name: 'Cobalt Blue Wetsuit (Cosmetic)', costGold: 450, costRelics: 0, type: 'suit', color: '#1e88e5' },
+  { id: 'suit_default', name: 'Standard Brass Wetsuit', costGold: 0, costRelics: 0, type: 'suit', color: '#ffab00' }
 ];
 
-let gameState = {
-  gold: 0,
-  relicsFound: {}, // { caribbean: [0,1,2...], ... }
-  completedRegions: [],
-  purchasedUpgrades: []
-};
+let gameState = { gold: 0, relicsFound: {}, spentRelics: 0, completedRegions: [], purchasedUpgrades: ['suit_default'], activeSuit: 'suit_default' };
+let preDiveState = null; 
+let isPaused = false;
 
 function loadSave() {
-  const data = localStorage.getItem('abyssal_save');
-  if (data) {
-    try { gameState = JSON.parse(data); } catch(e){}
-  }
+  const data = localStorage.getItem('abyssal_save_v13');
+  if (data) { try { gameState = JSON.parse(data); } catch(e){} }
+  if (gameState.spentRelics === undefined) gameState.spentRelics = 0;
+  if (!gameState.purchasedUpgrades.includes('suit_default')) gameState.purchasedUpgrades.push('suit_default');
+  if (!gameState.activeSuit) gameState.activeSuit = 'suit_default';
   REGIONS.forEach(r => { if (!gameState.relicsFound[r.id]) gameState.relicsFound[r.id] = []; });
 }
 
-function saveState() {
-  localStorage.setItem('abyssal_save', JSON.stringify(gameState));
-}
-
-function totalRelicsFound() {
-  return Object.values(gameState.relicsFound).reduce((acc, arr) => acc + arr.length, 0);
-}
+function saveState() { localStorage.setItem('abyssal_save_v13', JSON.stringify(gameState)); }
+function totalRelicsFound() { return Object.values(gameState.relicsFound).reduce((acc, arr) => acc + arr.length, 0); }
 
 /* -------------------------------------------------------------
- *  3. CORE SIMULATION CONSTANTS & VARIABLES
+ *  3. GAME ENTITIES & WORLD VARS
  * ------------------------------------------------------------- */
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const TILE_SIZE = 40;
-const MAP_COLS = 32; // 1280px wide
-let MAP_ROWS = 60;   // Dynamic based on region depth
 
-let activeRegion = null;
-let cameraY = 0;
-let keys = {};
-let mouse = { x: 0, y: 0, worldX: 0, worldY: 0 };
-let screenShake = 0;
+const lightCanvas = document.createElement('canvas');
+lightCanvas.width = 960; lightCanvas.height = 600;
+const lightCtx = lightCanvas.getContext('2d');
+
+let activeRegion = null, cameraX = 0, cameraY = 0;
+let keys = {}, mouse = { x: 0, y: 0, worldX: 0, worldY: 0 };
+let screenShake = 0, hasDescended = false, relicsThisDive = 0;
 
 let diver = null;
-let projectiles = [];
-let depthCharges = [];
-let particles = [];
-let floaters = [];
-let enemies = [];
-let mapGrid = [];
-let relicsInLevel = [];
-let treasuresInLevel = [];
-let o2Stations = [];
+let mapGrid = [], projectiles = [], depthCharges = [], particles = [], floaters = [], enemies = [], relics = [], treasures = [], o2Stations = [], ammoDrops = [], seaMines = [];
 
 /* -------------------------------------------------------------
- *  4. PROCEDURAL WORLD GENERATION
+ *  4. PROCEDURAL GENERATION & BIOMES
  * ------------------------------------------------------------- */
 function initLevel(region) {
-  activeRegion = region;
-  MAP_ROWS = Math.floor(region.depthLimit / TILE_SIZE);
-  mapGrid = [];
-  projectiles = [];
-  depthCharges = [];
-  particles = [];
-  floaters = [];
-  enemies = [];
-  relicsInLevel = [];
-  treasuresInLevel = [];
-  o2Stations = [];
+  preDiveState = JSON.parse(JSON.stringify(gameState));
 
-  // Upgrades calculation
+  activeRegion = region;
+  mapGrid = []; projectiles = []; depthCharges = []; particles = []; floaters = []; enemies = []; relics = []; treasures = []; o2Stations = []; ammoDrops = []; seaMines = [];
+  hasDescended = false; relicsThisDive = 0; cameraX = 0; cameraY = 0;
+
   const hasExtraO2 = gameState.purchasedUpgrades.includes('tank_upgrade');
   const hasExtraHP = gameState.purchasedUpgrades.includes('wetsuit_armor');
-  const hasExtraCharges = gameState.purchasedUpgrades.includes('charge_capacity');
+  
+  let maxC = 3;
+  if (gameState.purchasedUpgrades.includes('charge_capacity_1')) maxC += 3;
+  if (gameState.purchasedUpgrades.includes('charge_capacity_2')) maxC += 3;
 
   diver = {
-    x: 640,
-    y: 80,
-    vx: 0,
-    vy: 0,
-    w: 24,
-    h: 36,
-    maxHp: hasExtraHP ? 200 : 100,
-    hp: hasExtraHP ? 200 : 100,
-    maxO2: hasExtraO2 ? 150 : 100,
-    o2: hasExtraO2 ? 150 : 100,
-    charges: hasExtraCharges ? 6 : 3,
-    maxCharges: hasExtraCharges ? 6 : 3,
-    angle: 0,
-    invuln: 0
+    x: (region.cols * TILE_SIZE) / 2, y: 120, 
+    vx: 0, vy: 0, w: 24, h: 36,
+    maxHp: hasExtraHP ? 200 : 100, hp: hasExtraHP ? 200 : 100,
+    maxO2: hasExtraO2 ? 150 : 100, o2: hasExtraO2 ? 150 : 100,
+    maxCharges: maxC, charges: maxC, 
+    angle: Math.PI / 2, invuln: 0
   };
 
-  // 0: Water, 1: Solid Rock, 2: Destructible Rock
-  for (let r = 0; r < MAP_ROWS; r++) {
+  // Organic Multi-Frequency Terrain Generation
+  for (let r = 0; r < region.rows; r++) {
     mapGrid[r] = [];
-    for (let c = 0; c < MAP_COLS; c++) {
-      // Outer boundaries
-      if (c === 0 || c === MAP_COLS - 1 || r === MAP_ROWS - 1) {
-        mapGrid[r][c] = 1;
+    for (let c = 0; c < region.cols; c++) {
+      if (c === 0 || c === region.cols - 1 || r === region.rows - 1) {
+        mapGrid[r][c] = 10 + Math.floor(Math.random() * 4) + 1; 
       } else if (r < 4) {
-        mapGrid[r][c] = 0; // Top surface room
+        mapGrid[r][c] = 0; 
       } else {
-        // Procedural cave network
-        const n = Math.sin(c * 0.45) + Math.cos(r * 0.3);
-        if (n > 0.8) {
-          mapGrid[r][c] = Math.random() < 0.35 ? 2 : 1;
+        // Blended overlapping frequencies for natural continent/trench structures
+        let scaleX = region.style === 'horizontal' ? 0.15 : 0.08;
+        let scaleY = region.style === 'horizontal' ? 0.08 : 0.15;
+        
+        let n = Math.sin(c * scaleX) * Math.cos(r * scaleY) * 2.5 
+              + Math.sin(c * 0.04) * 1.5 
+              + Math.cos(r * 0.05) * 1.5 
+              + Math.sin(c * 0.3 + r * 0.3) * 0.5;
+
+        // Grit randomization to break perfect edges
+        n += (Math.random() * 0.4 - 0.2);
+
+        if (n > 1.2) {
+          let isCoral = Math.random() < 0.25;
+          mapGrid[r][c] = (isCoral ? 20 : 10) + Math.floor(Math.random() * 4) + 1;
         } else {
           mapGrid[r][c] = 0;
         }
@@ -387,812 +248,676 @@ function initLevel(region) {
     }
   }
 
-  // Carve a vertical passage so player can always navigate down
-  let pathCol = 16;
-  for (let r = 2; r < MAP_ROWS - 2; r++) {
-    pathCol += Math.floor(Math.random() * 3) - 1;
-    pathCol = Math.max(3, Math.min(MAP_COLS - 4, pathCol));
-    for (let dc = -2; dc <= 2; dc++) {
-      if (mapGrid[r][pathCol + dc] === 1) {
-        mapGrid[r][pathCol + dc] = Math.random() < 0.25 ? 2 : 0;
+  // Carve Main Structural Path (Prevents completely blocked map)
+  let pC = Math.floor(region.cols / 2);
+  for (let r = 2; r < region.rows - 2; r++) {
+    if (region.style === 'horizontal') pC += (Math.random() > 0.3 ? 1 : -1) * Math.floor(Math.random() * 3);
+    else pC += Math.floor(Math.random() * 3) - 1;
+    
+    pC = Math.max(3, Math.min(region.cols - 4, pC));
+    for (let dc = -3; dc <= 3; dc++) {
+      if (mapGrid[r][pC + dc]) mapGrid[r][pC + dc] = Math.random() < 0.15 ? 20 + Math.floor(Math.random() * 4) + 1 : 0;
+    }
+  }
+
+  const savedRelics = gameState.relicsFound[region.id] || [];
+  let placed = 0;
+
+  // Shipwreck Generation
+  let wrecksToPlace = (region.diff === 'Medium' || region.diff === 'Hard') ? (Math.random() > 0.5 ? 2 : 1) : 0;
+  let placedWrecks = 0;
+  let placedWreckRelics = 0;
+
+  while(placedWrecks < wrecksToPlace) {
+    let wWidth = 12;
+    let wHeight = 6;
+    let wx = Math.floor(Math.random() * (region.cols - wWidth - 4)) + 2;
+    let wy = region.rows - 8 - (placedWrecks * 10); 
+    
+    for(let r = 0; r < wHeight; r++) {
+      for(let c = 0; c < wWidth; c++) {
+        let gridY = Math.min(wy + r, region.rows - 2);
+        let gridX = wx + c;
+        if(r === 0 || r === wHeight - 1 || c === 0 || c === wWidth - 1) {
+          if ((r === 0 && (c === 5 || c === 6)) || (c === 0 && r >= 3) || (c === wWidth - 1 && r >= 3)) {
+            mapGrid[gridY][gridX] = 20 + Math.floor(Math.random() * 4) + 1; 
+          } else {
+            mapGrid[gridY][gridX] = 31; // Indestructible wreck tile
+          }
+        } else {
+          mapGrid[gridY][gridX] = 0; // Hollow inside
+        }
       }
     }
-  }
-
-  // Place 6 hidden Relics (either behind destructible walls or deep pockets)
-  const savedRelicIds = gameState.relicsFound[region.id] || [];
-  let placedRelics = 0;
-  while (placedRelics < 6) {
-    const rx = Math.floor(Math.random() * (MAP_COLS - 4)) + 2;
-    const ry = Math.floor(Math.random() * (MAP_ROWS - 15)) + 10;
-    if (mapGrid[ry][rx] === 0 || mapGrid[ry][rx] === 2) {
-      // Surround with destructible rocks if in open water
-      if (mapGrid[ry][rx] === 0) {
-        mapGrid[ry][rx] = 2;
+    
+    // Spawn relic in wreck
+    if (placedWreckRelics < 2 && placed < 6) {
+      relics.push({ id: placed, x: (wx + 6) * TILE_SIZE + 20, y: (wy + 4) * TILE_SIZE + 20, collected: savedRelics.includes(placed) });
+      placed++; placedWreckRelics++;
+    }
+    
+    // Wreck Guardians
+    let localPool = region.diff === 'Hard' ? ['skeleton', 'ghost', 'shark', 'angler'] : ['skeleton', 'shark', 'angler'];
+    let attempt = 0, placedEn = 0;
+    while(placedEn < 4 && attempt < 50) {
+      let rC = wx - 4 + Math.floor(Math.random() * (wWidth + 8));
+      let rR = wy - 4 + Math.floor(Math.random() * (wHeight + 8));
+      if (rC > 1 && rC < region.cols - 2 && rR > 4 && rR < region.rows - 2) {
+        if (mapGrid[rR][rC] === 0) {
+           let type = localPool[Math.floor(Math.random()*localPool.length)];
+           let hp = (type === 'shark') ? 3 : (type === 'ghost' || type === 'skeleton' ? 4 : 2);
+           let size = (type === 'shark') ? 22 : (type === 'ghost' || type === 'skeleton' ? 18 : 14);
+           let aggro = (type === 'ghost' || type === 'skeleton') ? 250 : 200;
+           enemies.push({ type, x: rC * TILE_SIZE + 20, y: rR * TILE_SIZE + 20, vx: 0, vy: 0, hp, size, aggro });
+           placedEn++;
+        }
       }
-      relicsInLevel.push({
-        id: placedRelics,
-        x: rx * TILE_SIZE + 20,
-        y: ry * TILE_SIZE + 20,
-        collected: savedRelicIds.includes(placedRelics)
-      });
-      placedRelics++;
+      attempt++;
+    }
+    placedWrecks++;
+  }
+
+  // Standard Relics (Drill path logic)
+  while (placed < 6) {
+    const rC = Math.floor(Math.random() * (region.cols - 10)) + 5;
+    const rR = Math.floor(Math.random() * (region.rows - 12)) + 8;
+    if (mapGrid[rR][rC] === 0 || mapGrid[rR][rC] === 31) continue; 
+    
+    mapGrid[rR][rC] = 20 + Math.floor(Math.random() * 4) + 1; 
+    relics.push({ id: placed, x: rC * TILE_SIZE + 20, y: rR * TILE_SIZE + 20, collected: savedRelics.includes(placed) });
+    
+    let dir = rC > region.cols / 2 ? -1 : 1;
+    let cx = rC + dir;
+    while (cx > 1 && cx < region.cols - 2) {
+      if (mapGrid[rR][cx] === 0) break; 
+      if (mapGrid[rR][cx] !== 31) mapGrid[rR][cx] = 20 + Math.floor(Math.random() * 4) + 1; 
+      cx += dir;
+    }
+    placed++;
+  }
+
+  // Items & Consumables
+  for (let i = 0; i < region.cols; i++) {
+    const cC = Math.floor(Math.random() * (region.cols - 4)) + 2;
+    const cR = Math.floor(Math.random() * (region.rows - 8)) + 6;
+    if (mapGrid[cR][cC] === 0) {
+      let rand = Math.random();
+      if (rand < 0.7) treasures.push({ x: cC * TILE_SIZE + 20, y: cR * TILE_SIZE + 20, value: 20 + Math.floor(Math.random()*30), consumed: false });
+      else if (rand < 0.85) o2Stations.push({ x: cC * TILE_SIZE + 20, y: cR * TILE_SIZE + 20, consumed: false });
+      else ammoDrops.push({ x: cC * TILE_SIZE + 20, y: cR * TILE_SIZE + 20, consumed: false });
     }
   }
 
-  // Scatter treasures (gold)
-  for (let i = 0; i < 25; i++) {
-    const tx = Math.floor(Math.random() * (MAP_COLS - 2)) + 1;
-    const ty = Math.floor(Math.random() * (MAP_ROWS - 6)) + 5;
-    if (mapGrid[ty][tx] === 0) {
-      treasuresInLevel.push({ x: tx * TILE_SIZE + 20, y: ty * TILE_SIZE + 20, value: 15 + Math.floor(Math.random() * 20), collected: false });
+  // Sea Mines
+  for (let i = 0; i < region.cols * 1.5; i++) {
+    const mC = Math.floor(Math.random() * (region.cols - 4)) + 2;
+    const mR = Math.floor(Math.random() * (region.rows - 10)) + 8;
+    if (mapGrid[mR][mC] === 0) {
+      let attached = mapGrid[mR-1][mC] >= 11 || mapGrid[mR+1][mC] >= 11 || mapGrid[mR][mC-1] >= 11 || mapGrid[mR][mC+1] >= 11;
+      if (attached) seaMines.push({ x: mC * TILE_SIZE + 20, y: mR * TILE_SIZE + 20, size: 12 });
     }
   }
 
-  // Scatter O2 refill stations
-  for (let r = 12; r < MAP_ROWS - 5; r += 12) {
-    for (let c = 3; c < MAP_COLS - 3; c++) {
-      if (mapGrid[r][c] === 0) {
-        o2Stations.push({ x: c * TILE_SIZE + 20, y: r * TILE_SIZE + 20, timer: 0 });
-        break;
-      }
-    }
-  }
+  // Tiered Ecosystem Enemy Spawning (Safeguarded)
+  const faunasEasy = ['squid', 'eel'];
+  const faunasMid = ['shark', 'angler'];
+  const faunasHard = ['ghost', 'skeleton'];
 
-  // Spawn hostile fauna
-  const faunaTypes = ['shark', 'eel', 'angler', 'ghost'];
-  for (let i = 0; i < region.enemyCount; i++) {
-    const ex = (Math.floor(Math.random() * (MAP_COLS - 4)) + 2) * TILE_SIZE;
-    const ey = (Math.floor(Math.random() * (MAP_ROWS - 12)) + 8) * TILE_SIZE;
-    const type = faunaTypes[Math.floor(Math.random() * faunaTypes.length)];
-    enemies.push({
-      type,
-      x: ex,
-      y: ey,
-      vx: (Math.random() - 0.5) * 1.5,
-      vy: (Math.random() - 0.5) * 1.5,
-      hp: type === 'shark' ? 3 : (type === 'angler' ? 2 : 1),
-      maxHp: 3,
-      size: type === 'shark' ? 22 : 16,
-      aggroRange: type === 'angler' ? 250 : 180
-    });
+  let spawnPool = [];
+  if (region.diff === 'Easy') spawnPool = [...faunasEasy];
+  else if (region.diff === 'Medium') spawnPool = [...faunasEasy, ...faunasMid];
+  else spawnPool = [...faunasMid, ...faunasHard];
+
+  let remainingEnemies = Math.max(0, region.enemyCount - enemies.length);
+  let spawned = 0, spawnAttempts = 0;
+  
+  while(spawned < remainingEnemies && spawnAttempts < 1000) {
+    const eC = Math.floor(Math.random() * (region.cols - 4)) + 2;
+    const eR = Math.floor(Math.random() * (region.rows - 8)) + 6;
+    
+    if (mapGrid[eR][eC] === 0) {
+      let type = spawnPool[Math.floor(Math.random() * spawnPool.length)];
+      let hp = 2, size = 16, aggro = 200;
+      
+      if (type === 'shark') { hp = 3; size = 22; }
+      if (type === 'ghost' || type === 'skeleton') { hp = 4; size = 18; aggro = 250; }
+      if (type === 'angler') { size = 14; }
+
+      // Added +20 offset so enemy center naturally perfectly aligns with empty tile void 
+      enemies.push({ type, x: eC * TILE_SIZE + 20, y: eR * TILE_SIZE + 20, vx: 0, vy: 0, hp, size, aggro });
+      spawned++;
+    }
+    spawnAttempts++;
   }
 }
 
 /* -------------------------------------------------------------
- *  5. PHYSICS & ENTITY UPDATES
+ *  5. CORE LOOP & PHYSICS
  * ------------------------------------------------------------- */
 function update() {
-  if (!diver) return;
+  if (!diver || isPaused) return;
 
-  // Screen shake decay
-  if (screenShake > 0) screenShake *= 0.88;
+  if (screenShake > 0) screenShake *= 0.85;
+  if (diver.y > 300) hasDescended = true;
 
-  // Diver Propulsion & Drag
-  const swimAccel = 0.28;
-  const drag = 0.94;
-  if (keys['w'] || keys['ArrowUp']) diver.vy -= swimAccel;
-  if (keys['s'] || keys['ArrowDown']) diver.vy += swimAccel;
-  if (keys['a'] || keys['ArrowLeft']) diver.vx -= swimAccel;
-  if (keys['d'] || keys['ArrowRight']) diver.vx += swimAccel;
-
-  diver.vx *= drag;
-  diver.vy *= drag;
-
-  // Collision with grid tiles
-  const nextX = diver.x + diver.vx;
-  const nextY = diver.y + diver.vy;
-
-  if (!isSolid(nextX - diver.w / 2, diver.y) && !isSolid(nextX + diver.w / 2, diver.y)) {
-    diver.x = nextX;
-  } else {
-    diver.vx = 0;
+  let shipX = (activeRegion.cols * TILE_SIZE) / 2 - 100;
+  if (hasDescended && diver.y < 150 && diver.x >= shipX && diver.x <= shipX + 200) { 
+    endDive(true); return; 
   }
 
-  if (!isSolid(diver.x, nextY - diver.h / 2) && !isSolid(diver.x, nextY + diver.h / 2)) {
-    diver.y = nextY;
-  } else {
-    diver.vy = 0;
-  }
+  const accel = 0.3, drag = 0.92, gravity = 0.12;
+  let isMoving = keys['w'] || keys['ArrowUp'] || keys['s'] || keys['ArrowDown'] || keys['a'] || keys['ArrowLeft'] || keys['d'] || keys['ArrowRight'];
 
-  // Aiming angle
+  if (!isMoving) diver.vy += gravity;
+  
+  if (keys['w'] || keys['ArrowUp']) diver.vy -= accel;
+  if (keys['s'] || keys['ArrowDown']) diver.vy += accel;
+  if (keys['a'] || keys['ArrowLeft']) diver.vx -= accel;
+  if (keys['d'] || keys['ArrowRight']) diver.vx += accel;
+  diver.vx *= drag; diver.vy *= drag;
+
+  if (!isSolid(diver.x + diver.vx, diver.y)) diver.x += diver.vx; else diver.vx = 0;
+  if (!isSolid(diver.x, diver.y + diver.vy)) diver.y += diver.vy; else diver.vy = 0;
+
   diver.angle = Math.atan2(mouse.worldY - diver.y, mouse.worldX - diver.x);
-
-  // Oxygen Drain & Suffocation
   diver.o2 = Math.max(0, diver.o2 - activeRegion.o2Rate);
-  if (diver.o2 <= 0) {
-    diver.hp -= 0.15; // Suffocation damages health
-  }
-
-  // Invulnerability timer decay
+  if (diver.o2 <= 0) diver.hp -= 0.15;
   if (diver.invuln > 0) diver.invuln--;
 
-  // Camera tracking
-  cameraY = diver.y - canvas.height / 2;
-  const maxCamY = MAP_ROWS * TILE_SIZE - canvas.height;
-  cameraY = Math.max(0, Math.min(maxCamY, cameraY));
-  mouse.worldX = mouse.x;
-  mouse.worldY = mouse.y + cameraY;
+  cameraX = Math.max(0, Math.min(diver.x - canvas.width / 2, activeRegion.cols * TILE_SIZE - canvas.width));
+  cameraY = Math.max(0, Math.min(diver.y - canvas.height / 2, activeRegion.rows * TILE_SIZE - canvas.height));
+  mouse.worldX = mouse.x + cameraX; mouse.worldY = mouse.y + cameraY;
 
-  // Emit subtle diver bubbles
-  if (Math.random() < 0.1) {
-    particles.push({
-      x: diver.x + (Math.random() - 0.5) * 10,
-      y: diver.y,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: -1 - Math.random(),
-      life: 50,
-      type: 'bubble'
-    });
-  }
-
-  // O2 Refill Stations
   o2Stations.forEach(st => {
-    const dist = Math.hypot(diver.x - st.x, diver.y - st.y);
-    if (dist < 40) {
-      diver.o2 = Math.min(diver.maxO2, diver.o2 + 0.6);
-      if (Math.random() < 0.3) {
-        particles.push({ x: st.x, y: st.y, vx: (Math.random()-0.5)*1.5, vy: -2, life: 30, type: 'bubble' });
+    if (!st.consumed && Math.hypot(diver.x - st.x, diver.y - st.y) < 25) {
+      st.consumed = true; diver.o2 = Math.min(diver.maxO2, diver.o2 + 50);
+      spawnText(st.x, st.y, "+OXYGEN", "#00e5ff");
+    }
+  });
+
+  ammoDrops.forEach(ammo => {
+    if (!ammo.consumed && Math.hypot(diver.x - ammo.x, diver.y - ammo.y) < 25) {
+      if (diver.charges < diver.maxCharges) {
+        ammo.consumed = true; 
+        let gained = Math.min(2, diver.maxCharges - diver.charges);
+        diver.charges += gained;
+        spawnText(ammo.x, ammo.y, `+${gained} MINES`, "#e53935");
       }
     }
   });
 
-  // Projectiles
-  for (let i = projectiles.length - 1; i >= 0; i--) {
-    const p = projectiles[i];
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life--;
-
-    // Tile hit
-    if (isSolid(p.x, p.y) || p.life <= 0) {
-      projectiles.splice(i, 1);
-      continue;
+  relics.forEach(r => {
+    if (!r.collected && Math.hypot(diver.x - r.x, diver.y - r.y) < 30) {
+      r.collected = true; relicsThisDive++;
+      if (!gameState.relicsFound[activeRegion.id].includes(r.id)) gameState.relicsFound[activeRegion.id].push(r.id);
+      spawnText(r.x, r.y, "RELIC FOUND!", "#ffd700"); saveState();
+      if (relicsThisDive + (gameState.relicsFound[activeRegion.id].length - relicsThisDive) === 6) {
+        setTimeout(() => endDive(true), 1500); 
+      }
     }
+  });
 
-    // Enemy hit
+  treasures.forEach(t => {
+    if (!t.consumed && Math.hypot(diver.x - t.x, diver.y - t.y) < 25) {
+      t.consumed = true; gameState.gold += t.value; saveState();
+      spawnText(t.x, t.y, `+${t.value}g`, "#38ef7d");
+    }
+  });
+
+  for (let i = seaMines.length - 1; i >= 0; i--) {
+    let m = seaMines[i];
+    if (Math.hypot(diver.x - m.x, diver.y - m.y) < m.size + 12 && diver.invuln <= 0) {
+      diver.hp -= 30; diver.invuln = 30; screenShake = 15;
+      createParticles(m.x, m.y, 'blast', 20);
+      seaMines.splice(i, 1);
+    }
+  }
+
+  for (let i = projectiles.length - 1; i >= 0; i--) {
+    let p = projectiles[i]; p.x += p.vx; p.y += p.vy; p.life--;
+    if (isSolid(p.x, p.y) || p.life <= 0) { projectiles.splice(i, 1); continue; }
+    
+    let p_destroyed = false;
+    
     for (let e = enemies.length - 1; e >= 0; e--) {
-      const en = enemies[e];
+      let en = enemies[e];
       if (Math.hypot(p.x - en.x, p.y - en.y) < en.size) {
-        en.hp -= p.damage;
-        audio.playDamage();
+        en.hp -= 1; projectiles.splice(i, 1); p_destroyed = true;
+        if (en.hp <= 0) { createParticles(en.x, en.y, 'blood', 10); enemies.splice(e, 1); }
+        break;
+      }
+    }
+    
+    if (p_destroyed) continue;
+
+    for (let m = seaMines.length - 1; m >= 0; m--) {
+      if (Math.hypot(p.x - seaMines[m].x, p.y - seaMines[m].y) < seaMines[m].size + 4) {
+        createParticles(seaMines[m].x, seaMines[m].y, 'blast', 15);
+        screenShake = 6;
+        seaMines.splice(m, 1);
         projectiles.splice(i, 1);
-        if (en.hp <= 0) {
-          spawnBloodOrGlow(en.x, en.y, en.type);
-          enemies.splice(e, 1);
-        }
         break;
       }
     }
   }
 
-  // Depth Charges
-  for (let i = depthCharges.length - 1; i >= 0; i--) {
-    const dc = depthCharges[i];
-    dc.vy += 0.05; // Sink slowly
-    dc.y += dc.vy;
-    dc.timer--;
-
-    if (dc.timer <= 0) {
-      explodeDepthCharge(dc.x, dc.y);
-      depthCharges.splice(i, 1);
-    }
-  }
-
-  // Enemies
   enemies.forEach(en => {
-    const distToDiver = Math.hypot(diver.x - en.x, diver.y - en.y);
-    if (distToDiver < en.aggroRange) {
-      const angle = Math.atan2(diver.y - en.y, diver.x - en.x);
-      en.vx += Math.cos(angle) * 0.15;
-      en.vy += Math.sin(angle) * 0.15;
+    let dist = Math.hypot(diver.x - en.x, diver.y - en.y);
+    if (dist < en.aggro) {
+      let ang = Math.atan2(diver.y - en.y, diver.x - en.x);
+      en.vx += Math.cos(ang) * 0.2; en.vy += Math.sin(ang) * 0.2;
     }
-    en.vx *= 0.96;
-    en.vy *= 0.96;
-
+    en.vx *= 0.95; en.vy *= 0.95;
     if (!isSolid(en.x + en.vx, en.y)) en.x += en.vx;
     if (!isSolid(en.x, en.y + en.vy)) en.y += en.vy;
-
-    // Damage player
-    if (distToDiver < en.size + 10 && diver.invuln <= 0) {
-      diver.hp -= 20;
-      diver.invuln = 45;
-      audio.playDamage();
-      screenShake = 12;
+    if (dist < en.size + 12 && diver.invuln <= 0) {
+      diver.hp -= 25; diver.invuln = 40; screenShake = 10; createParticles(diver.x, diver.y, 'blood', 5);
     }
   });
 
-  // Collect Relics
-  relicsInLevel.forEach(r => {
-    if (!r.collected && Math.hypot(diver.x - r.x, diver.y - r.y) < 30) {
-      r.collected = true;
-      if (!gameState.relicsFound[activeRegion.id].includes(r.id)) {
-        gameState.relicsFound[activeRegion.id].push(r.id);
-      }
-      audio.playCoin();
-      saveState();
-      spawnPopupText(r.x, r.y, "RELIC SALVAGED!", "#ffd700");
-    }
+  depthCharges.forEach((dc, i) => {
+    if (!isSolid(dc.x, dc.y + dc.vy)) dc.y += dc.vy; 
+    dc.timer--;
+    if (dc.timer <= 0) { detonateCharge(dc.x, dc.y); depthCharges.splice(i, 1); }
   });
 
-  // Collect Treasures
-  treasuresInLevel.forEach(t => {
-    if (!t.collected && Math.hypot(diver.x - t.x, diver.y - t.y) < 26) {
-      t.collected = true;
-      gameState.gold += t.value;
-      audio.playCoin();
-      saveState();
-      spawnPopupText(t.x, t.y, `+${t.value} Gold`, "#38ef7d");
-    }
-  });
+  particles.forEach((pt, i) => { pt.x += pt.vx; pt.y += pt.vy; pt.life--; if (pt.life <= 0) particles.splice(i, 1); });
+  floaters.forEach((fl, i) => { fl.y -= 0.5; fl.life--; if (fl.life <= 0) floaters.splice(i, 1); });
 
-  // Update Particles & Floating Texts
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const pt = particles[i];
-    pt.x += pt.vx;
-    pt.y += pt.vy;
-    pt.life--;
-    if (pt.life <= 0) particles.splice(i, 1);
-  }
-  for (let i = floaters.length - 1; i >= 0; i--) {
-    const fl = floaters[i];
-    fl.y -= 0.6;
-    fl.life--;
-    if (fl.life <= 0) floaters.splice(i, 1);
-  }
-
-  // Win condition: Reaching bottom research submarine or surfacing with relics
-  const reachedBottom = diver.y > (MAP_ROWS - 3) * TILE_SIZE;
-  if (reachedBottom && !activeRegion.clearedTriggered) {
-    activeRegion.clearedTriggered = true;
-    showCertification();
-  }
-
-  // Death Check
-  if (diver.hp <= 0) {
-    alert("DIVER LOST: Structural hull crushed or oxygen extinguished.");
-    returnToHub();
+  if (diver.hp <= 0) { 
+    gameState = JSON.parse(JSON.stringify(preDiveState));
+    saveState();
+    alert("DIVER LOST. Rescue team recovered you, but all salvage and data from this dive were lost."); 
+    returnToHub(); 
   }
 }
 
 function isSolid(x, y) {
-  const c = Math.floor(x / TILE_SIZE);
-  const r = Math.floor(y / TILE_SIZE);
-  if (c < 0 || c >= MAP_COLS || r < 0 || r >= MAP_ROWS) return true;
-  return mapGrid[r][c] === 1 || mapGrid[r][c] === 2;
+  let c = Math.floor(x / TILE_SIZE), r = Math.floor(y / TILE_SIZE);
+  if (c < 0 || c >= activeRegion.cols || r < 0 || r >= activeRegion.rows) return true;
+  return mapGrid[r][c] >= 11;
 }
 
-function explodeDepthCharge(x, y) {
-  audio.playExplode();
-  screenShake = 22;
-
-  // Blast radius
+function detonateCharge(x, y) {
+  screenShake = 18;
   const radius = 100;
-
-  // Destroy destructible tiles
-  const minC = Math.max(0, Math.floor((x - radius) / TILE_SIZE));
-  const maxC = Math.min(MAP_COLS - 1, Math.floor((x + radius) / TILE_SIZE));
-  const minR = Math.max(0, Math.floor((y - radius) / TILE_SIZE));
-  const maxR = Math.min(MAP_ROWS - 1, Math.floor((y + radius) / TILE_SIZE));
-
+  let minC = Math.max(0, Math.floor((x - radius)/TILE_SIZE)), maxC = Math.min(activeRegion.cols-1, Math.floor((x + radius)/TILE_SIZE));
+  let minR = Math.max(0, Math.floor((y - radius)/TILE_SIZE)), maxR = Math.min(activeRegion.rows-1, Math.floor((y + radius)/TILE_SIZE));
+  
   for (let r = minR; r <= maxR; r++) {
     for (let c = minC; c <= maxC; c++) {
-      if (mapGrid[r][c] === 2) {
-        mapGrid[r][c] = 0; // Destroyed!
-        for (let k = 0; k < 4; k++) {
-          particles.push({
-            x: c * TILE_SIZE + 20,
-            y: r * TILE_SIZE + 20,
-            vx: (Math.random() - 0.5) * 4,
-            vy: (Math.random() - 0.5) * 4,
-            life: 40,
-            type: 'debris'
-          });
-        }
+      if (mapGrid[r][c] >= 21 && mapGrid[r][c] <= 24) { 
+        mapGrid[r][c] = 0; createParticles(c*TILE_SIZE+20, r*TILE_SIZE+20, 'rock', 3); 
+      }
+    }
+  }
+  
+  if (Math.hypot(x - diver.x, y - diver.y) < radius) { diver.hp -= 40; diver.invuln = 20; }
+  
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    if (Math.hypot(x - enemies[i].x, y - enemies[i].y) < radius) {
+      enemies[i].hp -= 5;
+      if (enemies[i].hp <= 0) {
+        createParticles(enemies[i].x, enemies[i].y, 'blood', 15);
+        enemies.splice(i, 1);
       }
     }
   }
 
-  // Damage enemies
-  enemies.forEach(en => {
-    if (Math.hypot(x - en.x, y - en.y) < radius) {
-      en.hp -= 4;
+  for (let i = seaMines.length - 1; i >= 0; i--) {
+    if (Math.hypot(x - seaMines[i].x, y - seaMines[i].y) < radius) {
+      createParticles(seaMines[i].x, seaMines[i].y, 'blast', 15);
+      seaMines.splice(i, 1);
     }
-  });
-
-  // Damage diver if inside blast zone!
-  const distToDiver = Math.hypot(x - diver.x, y - diver.y);
-  if (distToDiver < radius) {
-    diver.hp -= Math.floor((1 - distToDiver / radius) * 60);
-    diver.invuln = 30;
-    audio.playDamage();
   }
 
-  // Shockwave visuals
-  for (let i = 0; i < 25; i++) {
-    particles.push({
-      x: x,
-      y: y,
-      vx: (Math.random() - 0.5) * 7,
-      vy: (Math.random() - 0.5) * 7,
-      life: 30,
-      type: 'blast'
-    });
-  }
+  createParticles(x, y, 'blast', 20);
 }
 
-function spawnBloodOrGlow(x, y, type) {
-  for (let i = 0; i < 15; i++) {
-    particles.push({
-      x,
-      y,
-      vx: (Math.random() - 0.5) * 3,
-      vy: (Math.random() - 0.5) * 3,
-      life: 40,
-      type: type === 'ghost' ? 'ectoplasm' : 'blood'
-    });
-  }
+function createParticles(x, y, type, count) {
+  for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, life: 30 + Math.random()*20, type });
 }
-
-function spawnPopupText(x, y, text, color) {
-  floaters.push({ x, y, text, color, life: 60 });
-}
+function spawnText(x, y, text, color) { floaters.push({ x, y, text, color, life: 60 }); }
 
 /* -------------------------------------------------------------
- *  6. PROCEDURAL RENDERING (METAL SLUG / RETRO STYLE)
+ *  6. RENDERING ENGINE & LIGHTING
  * ------------------------------------------------------------- */
 function render() {
+  if (!diver) return; 
+
   ctx.save();
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Screen shake translation
-  if (screenShake > 0.5) {
-    const rx = (Math.random() - 0.5) * screenShake;
-    const ry = (Math.random() - 0.5) * screenShake;
-    ctx.translate(rx, ry);
-  }
+  if (screenShake > 0) ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
+  
+  // Base Gradient Background
+  let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  grad.addColorStop(0, activeRegion.colorTop); grad.addColorStop(1, activeRegion.colorBot);
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   ctx.save();
-  ctx.translate(0, -cameraY);
+  ctx.translate(-cameraX, -cameraY);
 
-  // Background Water Gradient
-  const grad = ctx.createLinearGradient(0, 0, 0, MAP_ROWS * TILE_SIZE);
-  grad.addColorStop(0, '#004e92');
-  grad.addColorStop(0.3, '#001a33');
-  grad.addColorStop(1, '#00050d');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, MAP_COLS * TILE_SIZE, MAP_ROWS * TILE_SIZE);
+  let shipX = (activeRegion.cols * TILE_SIZE) / 2 - 100;
+  drawSprite('ship', shipX + 100, 90, 200, 100, () => {
+    ctx.fillStyle = '#455a64'; ctx.beginPath(); ctx.moveTo(shipX, 40); ctx.lineTo(shipX + 200, 40);
+    ctx.lineTo(shipX + 160, 140); ctx.lineTo(shipX + 40, 140); ctx.fill();
+    ctx.fillStyle = '#ffb300'; ctx.fillRect(shipX + 70, 0, 60, 40);
+  });
 
-  // Draw Grid Tiles
-  for (let r = 0; r < MAP_ROWS; r++) {
-    for (let c = 0; c < MAP_COLS; c++) {
-      const tile = mapGrid[r][c];
-      const tx = c * TILE_SIZE;
-      const ty = r * TILE_SIZE;
-
-      // Skip offscreen
-      if (ty + TILE_SIZE < cameraY || ty > cameraY + canvas.height) continue;
-
-      if (tile === 1) {
-        // Indestructible Subsea Rock
-        ctx.fillStyle = '#102027';
-        ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = '#263238';
-        ctx.strokeRect(tx, ty, TILE_SIZE, TILE_SIZE);
-      } else if (tile === 2) {
-        // Destructible Cracked Coral/Fissure
-        ctx.fillStyle = '#4a2c1b';
-        ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-        ctx.strokeStyle = '#ff7043';
-        ctx.beginPath();
-        ctx.moveTo(tx + 5, ty + 5);
-        ctx.lineTo(tx + 35, ty + 35);
-        ctx.moveTo(tx + 30, ty + 10);
-        ctx.lineTo(tx + 10, ty + 30);
-        ctx.stroke();
+  let rockColor = activeRegion.id === 'caribbean' ? '#00695c' : '#102027';
+  let coralColor = activeRegion.id === 'caribbean' ? '#c2185b' : '#4e342e';
+  
+  for (let r = 0; r < activeRegion.rows; r++) {
+    for (let c = 0; c < activeRegion.cols; c++) {
+      let tile = mapGrid[r][c], tx = c * TILE_SIZE, ty = r * TILE_SIZE;
+      if (tx+TILE_SIZE < cameraX || tx > cameraX+canvas.width || ty+TILE_SIZE < cameraY || ty > cameraY+canvas.height) continue;
+      
+      if (tile >= 11 && tile <= 14) {
+        drawSprite(`rock_${tile - 10}`, tx, ty, TILE_SIZE, TILE_SIZE, () => {
+          ctx.fillStyle = rockColor; ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+        });
+      }
+      else if (tile >= 21 && tile <= 24) {
+        drawSprite(`coral_${tile - 20}`, tx, ty, TILE_SIZE, TILE_SIZE, () => {
+          ctx.fillStyle = coralColor; ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+          ctx.strokeStyle = '#212121'; ctx.strokeRect(tx, ty, TILE_SIZE, TILE_SIZE);
+        });
+      }
+      else if (tile === 31) {
+        drawSprite('wreck', tx, ty, TILE_SIZE, TILE_SIZE, () => {
+          ctx.fillStyle = '#4e342e'; ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
+          ctx.strokeStyle = '#3e2723'; ctx.strokeRect(tx, ty, TILE_SIZE, TILE_SIZE);
+          ctx.beginPath(); ctx.moveTo(tx, ty + 10); ctx.lineTo(tx + TILE_SIZE, ty + 10);
+          ctx.moveTo(tx, ty + 30); ctx.lineTo(tx + TILE_SIZE, ty + 30); ctx.stroke();
+        });
       }
     }
   }
 
-  // Draw O2 Stations
-  o2Stations.forEach(st => {
-    ctx.fillStyle = '#00e5ff';
-    ctx.beginPath();
-    ctx.arc(st.x, st.y, 14, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText("O2", st.x - 7, st.y + 4);
-  });
+  o2Stations.forEach(st => { if (!st.consumed) {
+    drawSprite('o2', st.x, st.y, 16, 16, () => {
+      ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(st.x, st.y, 8, 0, Math.PI*2); ctx.fill();
+    });
+  }});
+  
+  ammoDrops.forEach(am => { if (!am.consumed) { 
+    drawSprite('ammo', am.x, am.y, 16, 16, () => {
+      ctx.fillStyle = '#e53935'; ctx.fillRect(am.x-8, am.y-8, 16, 16); ctx.fillStyle = '#fff'; ctx.fillRect(am.x-4, am.y-2, 8, 4);
+    });
+  }});
+  
+  relics.forEach(r => { if (!r.collected) { 
+    drawSprite('relic', r.x, r.y, 20, 20, () => {
+      ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(r.x, r.y, 10, 0, Math.PI*2); ctx.fill();
+    });
+  }});
+  
+  treasures.forEach(t => { if (!t.consumed) { 
+    drawSprite('treasure', t.x, t.y, 12, 12, () => {
+      ctx.fillStyle = '#ffca28'; ctx.fillRect(t.x-6, t.y-6, 12, 12);
+    });
+  }});
 
-  // Draw Sunken Relics (Gold Chalice / Relic)
-  relicsInLevel.forEach(r => {
-    if (!r.collected) {
-      ctx.fillStyle = '#ffd700';
-      ctx.beginPath();
-      ctx.arc(r.x, r.y, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#ffffff';
-      ctx.stroke();
+  seaMines.forEach(m => {
+    drawSprite('sea_mine', m.x, m.y, 24, 24, () => {
+      ctx.fillStyle = '#ff1744'; ctx.beginPath(); ctx.arc(m.x, m.y, m.size, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#212121'; ctx.fillRect(m.x-3, m.y-3, 6, 6);
+    });
+  });
+  
+  depthCharges.forEach(dc => { 
+    drawSprite('charge', dc.x, dc.y, 16, 16, () => {
+      ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(dc.x, dc.y, 8, 0, Math.PI*2); ctx.fill(); 
+    });
+    if (Math.floor(dc.timer / 8) % 2 === 0) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.beginPath(); ctx.arc(dc.x, dc.y, 4, 0, Math.PI*2); ctx.fill();
     }
   });
-
-  // Draw Treasures
-  treasuresInLevel.forEach(t => {
-    if (!t.collected) {
-      ctx.fillStyle = '#ffca28';
-      ctx.fillRect(t.x - 6, t.y - 6, 12, 12);
-    }
-  });
-
-  // Draw Enemies
+  
   enemies.forEach(en => {
-    ctx.save();
-    ctx.translate(en.x, en.y);
-    if (en.type === 'shark') {
-      ctx.fillStyle = '#607d8b';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 20, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Dorsal Fin
-      ctx.beginPath();
-      ctx.moveTo(-5, -10);
-      ctx.lineTo(0, -18);
-      ctx.lineTo(5, -10);
-      ctx.fill();
-    } else if (en.type === 'angler') {
-      ctx.fillStyle = '#212121';
-      ctx.beginPath();
-      ctx.arc(0, 0, 14, 0, Math.PI * 2);
-      ctx.fill();
-      // Bioluminescent Lure
-      ctx.strokeStyle = '#cddc39';
-      ctx.beginPath();
-      ctx.moveTo(0, -10);
-      ctx.lineTo(10, -20);
-      ctx.stroke();
-      ctx.fillStyle = '#eeff41';
-      ctx.beginPath();
-      ctx.arc(12, -22, 5, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (en.type === 'ghost') {
-      ctx.fillStyle = 'rgba(128, 222, 234, 0.7)';
-      ctx.beginPath();
-      ctx.arc(0, 0, 12, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      // Eel
-      ctx.fillStyle = '#00b0ff';
-      ctx.fillRect(-15, -4, 30, 8);
-    }
+    ctx.save(); ctx.translate(en.x, en.y);
+    let w = en.size * 2, h = en.size * 2;
+    if (en.type === 'shark') { w = 44; h = 20; }
+    if (en.type === 'ghost' || en.type === 'skeleton') { w = 24; h = 36; }
+    
+    drawSprite(en.type, 0, 0, w, h, () => {
+      if (en.type === 'shark') { ctx.fillStyle = '#78909c'; ctx.beginPath(); ctx.ellipse(0, 0, 22, 10, 0,0,Math.PI*2); ctx.fill(); }
+      else { ctx.fillStyle = '#8e24aa'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill(); }
+    });
     ctx.restore();
   });
 
-  // Draw Depth Charges
-  depthCharges.forEach(dc => {
-    ctx.fillStyle = '#e53935';
-    ctx.beginPath();
-    ctx.arc(dc.x, dc.y, 9, 0, Math.PI * 2);
-    ctx.fill();
-    // Blinking timer indicator
-    if (Math.floor(dc.timer / 8) % 2 === 0) {
-      ctx.fillStyle = '#fff';
-      ctx.beginPath();
-      ctx.arc(dc.x, dc.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  });
+  ctx.strokeStyle = '#00e676'; ctx.lineWidth = 3;
+  projectiles.forEach(p => { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x-p.vx, p.y-p.vy); ctx.stroke(); });
 
-  // Draw Projectiles
-  ctx.strokeStyle = '#00e676';
-  ctx.lineWidth = 3;
-  projectiles.forEach(p => {
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
-    ctx.lineTo(p.x - p.vx * 1.5, p.y - p.vy * 1.5);
-    ctx.stroke();
-  });
+  particles.forEach(pt => { ctx.fillStyle = pt.type==='blast'?'#ff9800':(pt.type==='blood'?'#d32f2f':'#8d6e63'); ctx.fillRect(pt.x, pt.y, 4, 4); });
+  floaters.forEach(fl => { ctx.fillStyle = fl.color; ctx.font = 'bold 12px sans-serif'; ctx.fillText(fl.text, fl.x, fl.y); });
 
-  // Draw Particles
-  particles.forEach(pt => {
-    if (pt.type === 'bubble') {
-      ctx.strokeStyle = 'rgba(255,255,255,0.7)';
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 2, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (pt.type === 'blast') {
-      ctx.fillStyle = '#ff9800';
-      ctx.fillRect(pt.x, pt.y, 4, 4);
-    } else if (pt.type === 'debris') {
-      ctx.fillStyle = '#8d6e63';
-      ctx.fillRect(pt.x, pt.y, 3, 3);
-    } else {
-      ctx.fillStyle = '#d32f2f';
-      ctx.fillRect(pt.x, pt.y, 2, 2);
-    }
-  });
-
-  // Draw Diver (Pixel Art Heavy Wetsuit & Brass Helmet)
-  if (diver) {
-    ctx.save();
-    ctx.translate(diver.x, diver.y);
+  if (diver.invuln % 6 < 3) {
+    ctx.save(); ctx.translate(diver.x, diver.y);
+    if (mouse.worldX < diver.x) ctx.scale(-1, 1);
     
-    // Flash if invulnerable
-    if (diver.invuln % 6 < 3) {
-      // Diver Body
-      ctx.fillStyle = '#ffab00'; // Industrial Dive Suit
-      ctx.fillRect(-10, -14, 20, 28);
+    let suitColor = '#ffab00'; 
+    let activeSuitData = SHOP_ITEMS.find(i => i.id === gameState.activeSuit);
+    if (activeSuitData && activeSuitData.color) suitColor = activeSuitData.color;
 
-      // Brass Helmet & Visor
-      ctx.fillStyle = '#ffd54f';
-      ctx.beginPath();
-      ctx.arc(0, -14, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#00e5ff';
-      ctx.fillRect(-4, -16, 8, 5);
-
-      // Aimed Harpoon Cannon
-      ctx.rotate(diver.angle);
-      ctx.fillStyle = '#37474f';
-      ctx.fillRect(6, -3, 16, 6);
-    }
+    drawSprite('diver', 0, 0, 32, 38, () => {
+      ctx.fillStyle = suitColor; ctx.fillRect(-10, -14, 20, 28); 
+      ctx.fillStyle = '#ffd54f'; ctx.beginPath(); ctx.arc(0, -14, 10, 0, Math.PI*2); ctx.fill(); 
+      ctx.fillStyle = '#37474f'; ctx.fillRect(0, -3, 16, 6); 
+    });
     ctx.restore();
   }
 
-  // Floating text popups
-  floaters.forEach(fl => {
-    ctx.fillStyle = fl.color;
-    ctx.font = 'bold 12px Courier New';
-    ctx.fillText(fl.text, fl.x - 20, fl.y);
-  });
+  ctx.restore(); 
 
-  // Abyss exit beacon (bottom room)
-  ctx.fillStyle = '#38ef7d';
-  ctx.fillRect(0, (MAP_ROWS - 1) * TILE_SIZE, MAP_COLS * TILE_SIZE, TILE_SIZE);
-  ctx.fillStyle = '#030811';
-  ctx.font = 'bold 16px Courier New';
-  ctx.fillText("--- DEEP EXTRACTION SUBMERSIBLE TRANSHIP DOCK ---", 220, (MAP_ROWS - 0.4) * TILE_SIZE);
+  // Lighting Update
+  let depthRatio = Math.max(0, (diver.y - 600) / (activeRegion.rows * TILE_SIZE - 600));
+  let darkness = Math.min(0.96, depthRatio * activeRegion.darknessFactor);
+  
+  if (darkness > 0) {
+    lightCtx.clearRect(0, 0, lightCanvas.width, lightCanvas.height);
+    lightCtx.fillStyle = `rgba(0, 0, 7, ${darkness})`; lightCtx.fillRect(0, 0, lightCanvas.width, lightCanvas.height);
+    
+    let hasLight1 = gameState.purchasedUpgrades.includes('flashlight');
+    let hasLight2 = gameState.purchasedUpgrades.includes('flashlight_2');
 
-  ctx.restore(); // Restore camera translation
+    if (hasLight1 || hasLight2) {
+      lightCtx.globalCompositeOperation = 'destination-out';
+      let screenX = diver.x - cameraX, screenY = diver.y - cameraY;
+      
+      let ambRadius = hasLight2 ? 160 : 120;
+      let beamRadius = hasLight2 ? 550 : 400; 
+      let beamSpread = hasLight2 ? 0.6 : 0.45;
 
-  // ---------------- HUD OVERLAY ----------------
-  renderHUD();
+      let radGrad = lightCtx.createRadialGradient(screenX, screenY, 0, screenX, screenY, ambRadius);
+      radGrad.addColorStop(0, 'rgba(255,255,255,1)'); radGrad.addColorStop(1, 'rgba(255,255,255,0)');
+      lightCtx.fillStyle = radGrad; lightCtx.beginPath(); lightCtx.arc(screenX, screenY, ambRadius, 0, Math.PI*2); lightCtx.fill();
+
+      let beamGrad = lightCtx.createRadialGradient(screenX, screenY, 50, screenX, screenY, beamRadius);
+      beamGrad.addColorStop(0, 'rgba(255,255,255,0.9)'); beamGrad.addColorStop(1, 'rgba(255,255,255,0)');
+      lightCtx.fillStyle = beamGrad; lightCtx.beginPath(); lightCtx.moveTo(screenX, screenY);
+      lightCtx.arc(screenX, screenY, beamRadius, diver.angle - beamSpread, diver.angle + beamSpread); lightCtx.lineTo(screenX, screenY); lightCtx.fill();
+      lightCtx.globalCompositeOperation = 'source-over'; 
+    }
+    ctx.drawImage(lightCanvas, 0, 0);
+  }
+
+  ctx.fillStyle = 'rgba(5, 15, 30, 0.85)'; ctx.fillRect(10, 10, 340, 80);
+  ctx.fillStyle = '#e0f8ff'; ctx.font = 'bold 12px Courier New';
+  ctx.fillText("OXYGEN", 20, 30); ctx.fillStyle = diver.o2 < 25 ? '#ff1744' : '#00e5ff'; ctx.fillRect(80, 20, (diver.o2/diver.maxO2)*120, 12);
+  ctx.fillStyle = '#e0f8ff'; ctx.fillText("HULL HP", 20, 50); ctx.fillStyle = '#76ff03'; ctx.fillRect(80, 40, (diver.hp/diver.maxHp)*120, 12);
+  ctx.fillStyle = '#ffd700'; ctx.fillText(`RELICS: ${gameState.relicsFound[activeRegion.id]?.length || 0}/6 | MINES: ${diver.charges}/${diver.maxCharges}`, 20, 75);
+  ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 14px Courier New'; ctx.fillText(`DEPTH: ${Math.floor((diver.y-120)/10)}m`, 820, 30);
+
+  if (hasDescended && diver.y < 160) {
+    if (diver.x >= shipX && diver.x <= shipX + 200) {
+      ctx.fillStyle = '#38ef7d'; ctx.font = 'bold 18px Courier'; ctx.fillText("RETURN TO SHIP TO EXTRACT", canvas.width/2 - 120, 80);
+    } else {
+      ctx.fillStyle = '#ffca28'; ctx.font = 'bold 18px Courier'; ctx.fillText("SWIM TO THE SHIP HULL TO EXTRACT", canvas.width/2 - 160, 80);
+      
+      let dist = (shipX + 100) - diver.x; 
+      let ratio = Math.min(1, Math.abs(dist) / 1500); 
+      let greenChannel = Math.floor(215 * (1 - ratio)); 
+      
+      ctx.fillStyle = `rgb(255, ${greenChannel}, 0)`;
+      ctx.beginPath();
+      
+      let arrowX = canvas.width / 2;
+      let arrowY = 110;
+      
+      if (dist > 0) {
+        ctx.moveTo(arrowX - 20, arrowY - 10); ctx.lineTo(arrowX + 10, arrowY - 10);
+        ctx.lineTo(arrowX + 10, arrowY - 20); ctx.lineTo(arrowX + 30, arrowY);
+        ctx.lineTo(arrowX + 10, arrowY + 20); ctx.lineTo(arrowX + 10, arrowY + 10);
+        ctx.lineTo(arrowX - 20, arrowY + 10);
+      } else {
+        ctx.moveTo(arrowX + 20, arrowY - 10); ctx.lineTo(arrowX - 10, arrowY - 10);
+        ctx.lineTo(arrowX - 10, arrowY - 20); ctx.lineTo(arrowX - 30, arrowY);
+        ctx.lineTo(arrowX - 10, arrowY + 20); ctx.lineTo(arrowX - 10, arrowY + 10);
+        ctx.lineTo(arrowX + 20, arrowY + 10);
+      }
+      ctx.fill();
+    }
+  }
 
   ctx.restore();
 }
 
-function renderHUD() {
-  if (!diver) return;
-
-  // HUD Frame
-  ctx.fillStyle = 'rgba(5, 15, 30, 0.85)';
-  ctx.fillRect(10, 10, 360, 80);
-  ctx.strokeStyle = '#00d2ff';
-  ctx.strokeRect(10, 10, 360, 80);
-
-  // O2 Gauge
-  ctx.fillStyle = '#e0f8ff';
-  ctx.font = 'bold 12px Courier New';
-  ctx.fillText("OXYGEN (O2)", 20, 30);
-  ctx.fillStyle = '#263238';
-  ctx.fillRect(110, 20, 150, 12);
-  ctx.fillStyle = diver.o2 < 25 ? '#ff1744' : '#00e5ff';
-  ctx.fillRect(110, 20, (diver.o2 / diver.maxO2) * 150, 12);
-
-  // Vitality Gauge
-  ctx.fillStyle = '#e0f8ff';
-  ctx.fillText("HULL HP", 20, 50);
-  ctx.fillStyle = '#263238';
-  ctx.fillRect(110, 40, 150, 12);
-  ctx.fillStyle = '#76ff03';
-  ctx.fillRect(110, 40, (diver.hp / diver.maxHp) * 150, 12);
-
-  // Depth Charges & Relics
-  const currentRelics = gameState.relicsFound[activeRegion.id] ? gameState.relicsFound[activeRegion.id].length : 0;
-  ctx.fillStyle = '#ffd700';
-  ctx.fillText(`RELICS: ${currentRelics}/6   CHARGES: ${diver.charges} [SPACE]`, 20, 75);
-
-  // Current Depth Gauge
-  const curDepthMeters = Math.floor(diver.y / 10);
-  ctx.fillStyle = '#00e5ff';
-  ctx.font = 'bold 14px Courier New';
-  ctx.fillText(`DEPTH: ${curDepthMeters}m`, 820, 30);
-  ctx.fillText(`GOLD: ${gameState.gold}`, 820, 50);
-}
-
 /* -------------------------------------------------------------
- *  7. CONTROLS & WEAPON ACTIONS
+ *  7. CONTROLS & FLOW
  * ------------------------------------------------------------- */
 window.addEventListener('keydown', e => {
   keys[e.key] = true;
-
-  // Deploy Depth Charge
-  if (e.code === 'Space' && diver && diver.charges > 0) {
-    diver.charges--;
-    depthCharges.push({
-      x: diver.x,
-      y: diver.y,
-      vy: 0.5,
-      timer: 85 // Ticks before detonation
-    });
+  if (e.code === 'Space' && diver && diver.charges > 0 && !isPaused) {
+    diver.charges--; depthCharges.push({ x: diver.x, y: diver.y, vy: 2, timer: 120 });
+  }
+  if (e.code === 'Escape' && diver) {
+    isPaused = !isPaused; document.getElementById('pauseOverlay').classList.toggle('hidden', !isPaused);
   }
 });
-
-window.addEventListener('keyup', e => {
-  keys[e.key] = false;
-});
-
+window.addEventListener('keyup', e => keys[e.key] = false);
 canvas.addEventListener('mousemove', e => {
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = e.clientX - rect.left;
-  mouse.y = e.clientY - rect.top;
+  const r = canvas.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
 });
-
 canvas.addEventListener('mousedown', e => {
-  if (e.button === 0 && diver) {
-    audio.init();
-    audio.playShoot();
-
-    const speed = 12;
-    const hasTriple = gameState.purchasedUpgrades.includes('pneumatic_spear');
-    const angles = hasTriple ? [diver.angle - 0.15, diver.angle, diver.angle + 0.15] : [diver.angle];
-
-    angles.forEach(ang => {
-      projectiles.push({
-        x: diver.x,
-        y: diver.y,
-        vx: Math.cos(ang) * speed,
-        vy: Math.sin(ang) * speed,
-        damage: 1,
-        life: 45
-      });
-    });
+  if (e.button === 0 && diver && !isPaused) {
+    let angles = gameState.purchasedUpgrades.includes('pneumatic_spear') ? [diver.angle-0.15, diver.angle, diver.angle+0.15] : [diver.angle];
+    angles.forEach(ang => projectiles.push({ x: diver.x, y: diver.y, vx: Math.cos(ang)*12, vy: Math.sin(ang)*12, life: 40 }));
   }
 });
 
-/* -------------------------------------------------------------
- *  8. GAME LOOP & STATE TRANSITIONS
- * ------------------------------------------------------------- */
 function gameLoop() {
-  if (diver) {
-    update();
-    render();
-  }
+  if (diver && !isPaused) { update(); render(); }
   requestAnimationFrame(gameLoop);
 }
 requestAnimationFrame(gameLoop);
 
-function openRegion(regionId) {
-  audio.init();
-  const region = REGIONS.find(r => r.id === regionId);
-  document.getElementById('hubOverlay').classList.add('hidden');
-  document.getElementById('shopOverlay').classList.add('hidden');
-  document.getElementById('certOverlay').classList.add('hidden');
-  initLevel(region);
-}
-
-function returnToHub() {
-  diver = null;
-  document.getElementById('hubOverlay').classList.remove('hidden');
-  document.getElementById('certOverlay').classList.add('hidden');
-  document.getElementById('shopOverlay').classList.add('hidden');
-  renderHub();
-}
-
-function showCertification() {
-  if (!gameState.completedRegions.includes(activeRegion.id)) {
-    gameState.completedRegions.push(activeRegion.id);
-  }
-  saveState();
-
-  const totalRelics = totalRelicsFound();
+function endDive(success) {
+  if (success && !gameState.completedRegions.includes(activeRegion.id)) gameState.completedRegions.push(activeRegion.id);
+  saveState(); diver = null; document.getElementById('pauseOverlay').classList.add('hidden');
+  
   const isMaster = gameState.completedRegions.length === 5;
-
-  document.getElementById('certTitle').innerText = isMaster 
-    ? "★ MASTER ABYSSAL EXPLORER CERTIFICATE ★" 
-    : `OFFICIAL EXPLORER CERTIFICATE: ${activeRegion.name.toUpperCase()}`;
-
+  document.getElementById('certTitle').innerText = isMaster ? " MASTER DIVER CERTIFICATE " : `DIVE LOG: ${activeRegion.name.toUpperCase()}`;
   document.getElementById('certStats').innerHTML = `
-    <strong>Site Name:</strong> ${activeRegion.name}<br>
-    <strong>Maximum Depth Reached:</strong> ${activeRegion.depthLimit / 10} Meters<br>
-    <strong>Regional Relics Retrieved:</strong> ${gameState.relicsFound[activeRegion.id].length} / 6<br>
-    <strong>Total World Relics Recovered:</strong> ${totalRelics} / 30<br>
-    <strong>Operational Status:</strong> Mission Successfully Completed<br>
-    <strong>Honor Rating:</strong> ${isMaster ? "COMMANDER OF THE FIVE OCEANS" : "LICENSED DEEP SEA SALVAGER"}
+    <strong>Status:</strong> ${success ? "Successfully Extracted to Surface Vessel" : "Mission Aborted"}<br>
+    <strong>Relics Secured This Dive:</strong> ${relicsThisDive}<br>
+    <strong>Region Relics Total:</strong> ${gameState.relicsFound[activeRegion.id].length} / 6<br>
+    <strong>Total Wealth:</strong> ${gameState.gold} Gold
   `;
-
   document.getElementById('certOverlay').classList.remove('hidden');
 }
 
+function returnToHub() {
+  diver = null; isPaused = false;
+  document.getElementById('hubOverlay').classList.remove('hidden');
+  document.getElementById('certOverlay').classList.add('hidden');
+  document.getElementById('pauseOverlay').classList.add('hidden');
+  renderHub();
+}
+
 /* -------------------------------------------------------------
- *  9. UI & MENU LOGIC
+ *  8. MENUS & ECONOMY
  * ------------------------------------------------------------- */
 function renderHub() {
   document.getElementById('goldTracker').innerText = `Salvage Vault: ${gameState.gold} Gold`;
-  const btnGroup = document.getElementById('regionButtons');
-  btnGroup.innerHTML = '';
-
+  let grp = document.getElementById('regionButtons'); grp.innerHTML = '';
   REGIONS.forEach(reg => {
-    const btn = document.createElement('button');
-    const relics = gameState.relicsFound[reg.id] ? gameState.relicsFound[reg.id].length : 0;
-    const completed = gameState.completedRegions.includes(reg.id);
-    btn.innerHTML = `${reg.name} [${reg.diff}]<br><small>${completed ? '✔ Cleared' : 'Incomplete'} | Relics: ${relics}/6</small>`;
-    btn.onclick = () => openRegion(reg.id);
-    btnGroup.appendChild(btn);
+    let btn = document.createElement('button');
+    let rels = gameState.relicsFound[reg.id]?.length || 0;
+    btn.innerHTML = `${reg.name} [${reg.diff}]<br><small>${rels}/6 Relics Found</small>`;
+    btn.onclick = () => { document.getElementById('hubOverlay').classList.add('hidden'); initLevel(reg); };
+    grp.appendChild(btn);
   });
 }
 
 function renderShop() {
-  document.getElementById('shopGoldDisplay').innerText = `Current Funds: ${gameState.gold} Gold`;
-  const container = document.getElementById('shopItemsContainer');
-  container.innerHTML = '';
-
-  const totalRelics = totalRelicsFound();
-
+  let unspentRelics = totalRelicsFound() - (gameState.spentRelics || 0);
+  document.getElementById('shopGoldDisplay').innerHTML = `Vault Funds: ${gameState.gold} Gold &nbsp;&nbsp;|&nbsp;&nbsp; Unspent Relics: ${unspentRelics}`;
+  
+  let c = document.getElementById('shopItemsContainer'); c.innerHTML = '';
+  
   SHOP_ITEMS.forEach(item => {
-    const isOwned = gameState.purchasedUpgrades.includes(item.id);
-    const meetsRelicReq = totalRelics >= item.reqRelics;
+    if (item.requires && !gameState.purchasedUpgrades.includes(item.requires)) return;
 
-    const div = document.createElement('div');
-    div.className = 'shop-item';
-    div.innerHTML = `
-      <div>
-        <strong>${item.name}</strong><br>
-        <span style="font-size: 12px; color: #90a4ae;">Cost: ${item.cost} Gold</span><br>
-        <span style="font-size: 11px; color: ${meetsRelicReq ? '#00e5ff' : '#ff5252'};">
-          Req: ${item.reqRelics} Total Relics (Have: ${totalRelics})
-        </span>
-      </div>
-      <button style="margin-top: 10px;" id="buy-${item.id}" 
-        ${isOwned || !meetsRelicReq || gameState.gold < item.cost ? 'disabled' : ''}>
-        ${isOwned ? 'OWNED' : 'PURCHASE'}
-      </button>
-    `;
+    let owned = gameState.purchasedUpgrades.includes(item.id);
+    let canAfford = gameState.gold >= item.costGold && unspentRelics >= item.costRelics;
 
-    container.appendChild(div);
+    let btnText = owned ? 'OWNED' : 'BUY';
+    if (item.type === 'suit') {
+      if (gameState.activeSuit === item.id) btnText = 'EQUIPPED';
+      else if (owned) btnText = 'EQUIP';
+    }
 
-    const btn = div.querySelector(`#buy-${item.id}`);
-    if (btn && !isOwned) {
-      btn.onclick = () => {
-        if (gameState.gold >= item.cost && meetsRelicReq) {
-          gameState.gold -= item.cost;
-          gameState.purchasedUpgrades.push(item.id);
-          saveState();
-          audio.playCoin();
-          renderShop();
+    let costText = '';
+    if (item.costGold > 0) costText += `${item.costGold} Gold `;
+    if (item.costRelics > 0) costText += `${item.costRelics} Relics`;
+    if (item.costGold === 0 && item.costRelics === 0 && !owned) costText = "Free";
+    if (owned && item.type !== 'suit') costText = "Acquired";
+
+    let btnDisabled = false;
+    if (owned && item.type !== 'suit') btnDisabled = true;
+    if (!owned && !canAfford) btnDisabled = true;
+    if (item.type === 'suit' && gameState.activeSuit === item.id) btnDisabled = true;
+
+    let html = `
+      <div class="shop-item">
+        <div>
+          <strong>${item.name}</strong><br>
+          <small style="color:#90a4ae">Cost: ${costText}</small>
+        </div>
+        <button id="b-${item.id}" ${btnDisabled ? 'disabled' : ''}>${btnText}</button>
+      </div>`;
+      
+    c.insertAdjacentHTML('beforeend', html);
+    
+    let btn = document.getElementById(`b-${item.id}`);
+    if (btn && !btnDisabled) {
+      btn.onclick = () => { 
+        if (owned && item.type === 'suit') {
+          gameState.activeSuit = item.id;
+        } else if (!owned) {
+          gameState.gold -= item.costGold; 
+          gameState.spentRelics += item.costRelics;
+          gameState.purchasedUpgrades.push(item.id); 
+          if (item.type === 'suit') gameState.activeSuit = item.id;
         }
+        saveState(); 
+        renderShop(); 
       };
     }
   });
 }
 
-// Hub buttons
-document.getElementById('openShopBtn').onclick = () => {
-  document.getElementById('hubOverlay').classList.add('hidden');
-  document.getElementById('shopOverlay').classList.remove('hidden');
-  renderShop();
-};
+document.getElementById('openShopBtn').onclick = () => { document.getElementById('hubOverlay').classList.add('hidden'); document.getElementById('shopOverlay').classList.remove('hidden'); renderShop(); };
+document.getElementById('closeShopBtn').onclick = () => { document.getElementById('shopOverlay').classList.add('hidden'); returnToHub(); };
+document.getElementById('resumeBtn').onclick = () => { isPaused = false; document.getElementById('pauseOverlay').classList.add('hidden'); };
+document.getElementById('abortBtn').onclick = () => { endDive(true); };
+document.getElementById('claimCertBtn').onclick = returnToHub;
+document.getElementById('resetDataBtn').onclick = () => { if(confirm("Wipe all data?")) { localStorage.removeItem('abyssal_save_v13'); loadSave(); renderHub(); } };
 
-document.getElementById('closeShopBtn').onclick = () => {
-  document.getElementById('shopOverlay').classList.add('hidden');
-  document.getElementById('hubOverlay').classList.remove('hidden');
-  renderHub();
-};
-
-document.getElementById('claimCertBtn').onclick = () => {
-  returnToHub();
-};
-
-document.getElementById('resetDataBtn').onclick = () => {
-  if (confirm("Reset all dive progress, relics, and upgrades?")) {
-    localStorage.removeItem('abyssal_save');
-    loadSave();
-    renderHub();
-  }
-};
-
-// Initialize
-loadSave();
-renderHub();
+loadSave(); renderHub();
 </script>
 </body>
 </html>
