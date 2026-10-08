@@ -187,15 +187,15 @@ const SHOP_ITEMS = [
   { id: 'charge_capacity_1', name: 'Mine Pouch I (+3 Mines Capacity)', costGold: 0, costRelics: 2, type: 'gear' },
   { id: 'charge_capacity_2', name: 'Mine Pouch II (+3 Mines Capacity)', costGold: 0, costRelics: 3, requires: 'charge_capacity_1', type: 'gear' },
   { id: 'upgrade_degaussed', name: 'Electromagnetic Degausser (Mine Stealth)', costGold: 1000, costRelics: 2, type: 'gear' },
-  { id: 'suit_pink', name: 'Neon Pink Wetsuit (Cosmetic)', costGold: 1000, costRelics: 0, type: 'suit', color: '#e91e63' },
-  { id: 'suit_blue', name: 'Cobalt Blue Wetsuit (Cosmetic)', costGold: 1000, costRelics: 0, type: 'suit', color: '#1e88e5' },
+  { id: 'suit_pink', name: 'Magenta Wetsuit (Cosmetic)', costGold: 1000, costRelics: 0, type: 'suit', color: '#e91e63' },
+  { id: 'suit_green', name: 'Wetsuit (Cosmetic)', costGold: 1000, costRelics: 0, type: 'suit', color: '#008800' },
   { id: 'suit_default', name: 'Standard Brass Wetsuit', costGold: 0, costRelics: 0, type: 'suit', color: '#ffab00' }
 ];
 
 const ASSET_MAP = {
   'diver_still': 'sprite-diver-still', 'diver_swim': 'sprite-diver-jump', 'diver_aim_fwd': 'sprite-diver-aim-fwd', 'diver_aim_up': 'sprite-diver-aim-up',
   'diver_pink_still': 'sprite-diver-pink-still', 'diver_pink_swim': 'sprite-diver-pink-jump', 'diver_pink_aim_fwd': 'sprite-diver-pink-aim-fwd', 'diver_pink_aim_up': 'sprite-diver-pink-aim-up',
-  'diver_blue_still': 'sprite-diver-blue-still', 'diver_blue_swim': 'sprite-diver-blue-jump', 'diver_blue_aim_fwd': 'sprite-diver-blue-aim-fwd', 'diver_blue_aim_up': 'sprite-diver-blue-aim-up',
+  'diver_green_still': 'sprite-diver-green-still', 'diver_green_swim': 'sprite-diver-green-jump', 'diver_green_aim_fwd': 'sprite-diver-green-aim-fwd', 'diver_green_aim_up': 'sprite-diver-green-aim-up',
   'skeleton': 'sprite-sailor-skeleton', 'shark': 'sprite-shark', 'angler_unlit': 'sprite-angler-unlit', 'angler_lit': 'sprite-angler-lit', 'eel': 'sprite-electric-eel', 'squid': 'sprite-squid', 'ghost': 'sprite-pirate-ghost',
   'rock_1': 'coral-indestruct-1', 'rock_2': 'coral-indestruct-2', 'rock_3': 'coral-indestruct-3', 'rock_4': 'coral-indestruct-4',
   'coral_1': 'coral-destruct-1', 'coral_2': 'coral-destruct-2', 'coral_3': 'coral-destruct-3', 'coral_4': 'coral-destruct-4',
@@ -636,14 +636,14 @@ class Renderer {
       
       let prefix = 'diver';
       if (engine.activeSuit === 'suit_pink') prefix = 'diver_pink';
-      if (engine.activeSuit === 'suit_blue') prefix = 'diver_blue';
+      if (engine.activeSuit === 'suit_green') prefix = 'diver_green';
       
       let dSprite = `${prefix}_still`;
       if (InputManager.isMoving()) dSprite = `${prefix}_swim`;
       else if (Math.abs(dx) > 30 || Math.abs(dy) > 30) dSprite = dy < 0 ? `${prefix}_aim_up` : `${prefix}_aim_fwd`;
 
       AssetManager.draw(this.ctx, dSprite, 0, 0, 48, 56, ct => {
-        ct.fillStyle = engine.activeSuit === 'suit_pink' ? '#e91e63' : (engine.activeSuit === 'suit_blue' ? '#1e88e5' : '#ffab00');
+        ct.fillStyle = engine.activeSuit === 'suit_pink' ? '#e91e63' : (engine.activeSuit === 'suit_green' ? '#008800' : '#ffab00');
         ct.fillRect(-12, -16, 24, 32); ct.fillStyle = '#ffd54f'; ct.beginPath(); ct.arc(0, -16, 12, 0, Math.PI*2); ct.fill(); 
       });
       this.ctx.restore();
