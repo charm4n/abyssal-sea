@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Abyssal Salvage - Deep Sea Diver</title>
+  <title>Abyssal Salvage - Deep, Blue Sea</title>
   <style>
     * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; }
     body {
@@ -15,81 +15,117 @@
     #game-container {
       position: relative; width: 960px; height: 600px;
       border: 4px solid #1a3b5c; box-shadow: 0 0 30px rgba(0, 180, 255, 0.25);
-      background: #020c1b; cursor: crosshair;
+      background: #020c1b; cursor: crosshair; overflow: hidden;
     }
-    canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+    canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; position: absolute; top: 0; left: 0; }
     
+    /* DOM-based HUD layer (Highly optimized by browser compositor) */
+    #dom-hud {
+      position: absolute; top: 10px; left: 10px; width: 340px; height: 80px;
+      background: rgba(5, 15, 30, 0.85); border-radius: 4px; border: 1px solid #1a4971;
+      z-index: 5; display: flex; flex-direction: column; padding: 10px; pointer-events: none;
+    }
+    .hud-row { display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; font-weight: bold; }
+    .hud-label { width: 60px; color: #e0f8ff; }
+    .hud-bar-bg { width: 120px; height: 12px; background: rgba(255,255,255,0.1); margin-left: 10px; border-radius: 2px; overflow: hidden; position: relative; }
+    .hud-bar-fill { height: 100%; width: 100%; transition: width 0.1s linear, background-color 0.2s; }
+    #hud-o2-fill { background: #00e5ff; }
+    #hud-hp-fill { background: #76ff03; }
+    .hud-stats { color: #ffd700; font-size: 12px; font-weight: bold; margin-top: 4px; }
+    
+    #hud-depth { position: absolute; top: 10px; right: 20px; color: #00e5ff; font-size: 16px; font-weight: bold; z-index: 5; pointer-events: none; text-shadow: 1px 1px 2px #000; }
+    #hud-extract-msg { position: absolute; top: 80px; width: 100%; text-align: center; font-size: 18px; font-weight: bold; z-index: 5; pointer-events: none; display: none; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+
     .ui-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(2, 10, 25, 0.92);
+      background: rgba(2, 10, 25, 0.92); backdrop-filter: blur(4px);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 10; padding: 30px;
+      z-index: 10; padding: 30px; transition: opacity 0.3s ease;
     }
-    .hidden { display: none !important; }
-    h1 { font-size: 28px; color: #38ef7d; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px; }
+    .hidden { display: none !important; opacity: 0; pointer-events: none; }
+    h1 { font-size: 28px; color: #38ef7d; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 10px rgba(56, 239, 125, 0.5); }
     h2 { font-size: 18px; color: #00d2ff; margin-bottom: 20px; }
+    
     .btn-group { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; max-width: 800px; margin-top: 15px; }
     button {
       background: #0d223a; border: 2px solid #00d2ff; color: #e0f8ff;
       padding: 10px 18px; font-family: inherit; font-size: 14px; font-weight: bold;
-      cursor: pointer; transition: all 0.2s;
+      cursor: pointer; transition: all 0.2s; border-radius: 4px; text-transform: uppercase;
     }
-    button:hover:not(:disabled) { background: #00d2ff; color: #030811; box-shadow: 0 0 15px #00d2ff; }
-    button:disabled { border-color: #455a64; color: #546e7a; cursor: not-allowed; }
+    button:hover:not(:disabled) { background: #00d2ff; color: #030811; box-shadow: 0 0 15px rgba(0, 210, 255, 0.6); transform: translateY(-2px); }
+    button:disabled { border-color: #455a64; color: #546e7a; cursor: not-allowed; background: #07121e; }
     
     .cert-card {
-      border: 4px double #ffd700; padding: 24px; text-align: center;
+      border: 4px double #ffd700; padding: 24px; text-align: center; border-radius: 8px;
       background: #051424; max-width: 550px; box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
     }
     .cert-card h3 { color: #ffd700; font-size: 22px; margin-bottom: 12px; }
-    .cert-stats { margin: 15px 0; font-size: 14px; line-height: 1.6; color: #b0bec5; text-align: left; }
+    .cert-stats { margin: 15px 0; font-size: 14px; line-height: 1.6; color: #b0bec5; text-align: left; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 4px; }
     
     .shop-wrapper {
-      width: 100%;
-      max-width: 700px;
-      max-height: 360px;
-      overflow-y: auto;
-      margin-bottom: 20px;
-      padding-right: 10px;
+      width: 100%; max-width: 740px; max-height: 380px; overflow-y: auto;
+      margin-bottom: 20px; padding-right: 10px;
     }
     .shop-wrapper::-webkit-scrollbar { width: 8px; }
     .shop-wrapper::-webkit-scrollbar-track { background: rgba(7, 26, 46, 0.5); border-radius: 4px; }
     .shop-wrapper::-webkit-scrollbar-thumb { background: #1a4971; border-radius: 4px; border: 1px solid #00d2ff; }
     
     .shop-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; }
-    .shop-item { background: #071a2e; border: 1px solid #1a4971; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+    .shop-item { background: linear-gradient(180deg, #071a2e 0%, #040e1a 100%); border: 1px solid #1a4971; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; border-radius: 6px; transition: border-color 0.2s; }
+    .shop-item:hover { border-color: #00d2ff; }
+
+    /* Custom Message Box (Replaces alert/confirm) */
+    #messageBoxOverlay { z-index: 100; background: rgba(0,0,0,0.85); }
+    .msg-box { background: #0a192f; border: 2px solid #00d2ff; padding: 25px; border-radius: 6px; text-align: center; max-width: 400px; box-shadow: 0 0 30px rgba(0, 210, 255, 0.3); }
+    .msg-box h3 { color: #00d2ff; margin-bottom: 15px; font-size: 20px; }
+    .msg-box p { color: #e0f8ff; margin-bottom: 25px; font-size: 14px; line-height: 1.5; }
   </style>
 </head>
 <body>
 
 <div id="game-container">
+  <!-- Game Layers -->
   <canvas id="gameCanvas" width="960" height="600"></canvas>
 
+  <!-- DOM-Based HUD -->
+  <div id="dom-hud" class="hidden">
+    <div class="hud-row">
+      <span class="hud-label">OXYGEN</span>
+      <div class="hud-bar-bg"><div id="hud-o2-fill" class="hud-bar-fill"></div></div>
+    </div>
+    <div class="hud-row">
+      <span class="hud-label">HULL HP</span>
+      <div class="hud-bar-bg"><div id="hud-hp-fill" class="hud-bar-fill"></div></div>
+    </div>
+    <div class="hud-stats" id="hud-relics-mines">RELICS: 0/6 | MINES: 0/0</div>
+  </div>
+  <div id="hud-depth" class="hidden">DEPTH: 0m</div>
+  <div id="hud-extract-msg"></div>
+
+  <!-- UI Overlays -->
   <div id="hubOverlay" class="ui-overlay">
     <h1>Abyssal Salvage</h1>
     <h2>Select Dive Expedition</h2>
-    <div style="font-size: 14px; color: #ffd700; margin-bottom: 15px;" id="goldTracker">Salvage Vault: 0 Gold</div>
+    <div style="font-size: 14px; color: #ffd700; margin-bottom: 15px; padding: 5px 15px; background: rgba(255,215,0,0.1); border-radius: 20px; border: 1px solid rgba(255,215,0,0.3);" id="goldTracker">Vault: 0 Gold</div>
     <div class="btn-group" id="regionButtons"></div>
     <div class="btn-group" style="margin-top: 30px;">
       <button id="openShopBtn">Submersible Armory & Shop</button>
-      <button id="resetDataBtn" style="border-color: #ff5252; color: #ff5252;">Wipe Career Data</button>
+      <button id="resetDataBtn" style="border-color: #ff5252; color: #ff5252; background: rgba(255,82,82,0.1);">Wipe Career Data</button>
     </div>
   </div>
 
   <div id="shopOverlay" class="ui-overlay hidden">
     <h1>Submersible Outfitter</h1>
     <h2 id="shopGoldDisplay">Current Funds: 0 Gold</h2>
-    <div class="shop-wrapper">
-      <div class="shop-grid" id="shopItemsContainer"></div>
-    </div>
-    <button id="closeShopBtn">Return to Chart Room</button>
+    <div class="shop-wrapper"><div class="shop-grid" id="shopItemsContainer"></div></div>
+    <button id="closeShopBtn" style="margin-top: 15px;">Return to Chart Room</button>
   </div>
 
   <div id="pauseOverlay" class="ui-overlay hidden" style="background: rgba(0,0,0,0.8);">
     <h1>DIVE PAUSED</h1>
     <div class="btn-group">
       <button id="resumeBtn">Resume Dive</button>
-      <button id="abortBtn" style="border-color: #ff5252; color: #ff5252;">Abort to Surface (Extract with Loot)</button>
+      <button id="abortBtn" style="border-color: #ff5252; color: #ff5252;">Abort Dive (Lose Salvage)</button>
     </div>
   </div>
 
@@ -97,51 +133,49 @@
     <div class="cert-card">
       <h3 id="certTitle">Official Diver's Certification</h3>
       <p style="font-size: 12px; color: #78909c;">INTERNATIONAL MARITIME EXPLORATION BUREAU</p>
-      <hr style="border: 0; height: 1px; background: #ffd700; margin: 12px 0;">
+      <hr style="border: 0; height: 1px; background: #ffd700; margin: 12px 0; opacity: 0.5;">
       <div class="cert-stats" id="certStats"></div>
-      <button id="claimCertBtn">Log Certificate & Return to Base</button>
+      <button id="claimCertBtn">Log & Return to Base</button>
+    </div>
+  </div>
+
+  <!-- Custom Alert/Confirm Modal -->
+  <div id="messageBoxOverlay" class="ui-overlay hidden">
+    <div class="msg-box">
+      <h3 id="msgTitle">Notification</h3>
+      <p id="msgText">Message goes here.</p>
+      <div class="btn-group">
+        <button id="msgConfirmBtn">Confirm</button>
+        <button id="msgCancelBtn" class="hidden" style="border-color: #546e7a;">Cancel</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-/* -------------------------------------------------------------
- *  1. ASSET LOADER (GRITTY PIXEL ART PIPELINE)
- * ------------------------------------------------------------- */
-const ASSETS = {};
-const assetList = [
-  'diver', 'shark', 'angler', 'eel', 'squid', 'ghost', 'skeleton',
-  'rock_1', 'rock_2', 'rock_3', 'rock_4', 'coral_1', 'coral_2', 'coral_3', 'coral_4', 
-  'relic', 'treasure', 'o2', 'ammo', 'charge', 'ship', 'sea_mine', 'wreck'
-];
+const CONSTANTS = {
+  TILE_SIZE: 40,
+  VIEW_W: 960,
+  VIEW_H: 600,
+  BASE_FPS: 60,
+  FRAME_MS: 1000 / 60
+};
 
-assetList.forEach(name => {
-  const img = new Image();
-  img.src = `assets/${name}.png`;
-  img.onload = () => { ASSETS[name] = img; };
-});
+const ENTITY_DEFS = {
+  shark: { w: 88, h: 40, hp: 3, size: 22, aggro: 350, speed: 0.12, search: 120 },
+  ghost: { w: 48, h: 56, hp: 4, size: 18, aggro: 450, speed: 0.08, search: 60 },
+  skeleton:{ w: 48, h: 56, hp: 4, size: 18, aggro: 450, speed: 0.08, search: 60 },
+  angler:  { w: 56, h: 56, hp: 2, size: 14, aggro: 350, speed: 0.06, search: 120 },
+  eel:     { w: 64, h: 64, hp: 2, size: 16, aggro: 250, speed: 0.08, search: 120 },
+  squid:   { w: 64, h: 64, hp: 2, size: 16, aggro: 250, speed: 0.06, search: 120 }
+};
 
-function drawSprite(name, x, y, w, h, fallbackFn) {
-  if (ASSETS[name] && ASSETS[name].complete && ASSETS[name].naturalWidth !== 0) {
-    if (fallbackFn && name !== 'wreck' && !name.includes('rock') && !name.includes('coral')) {
-      ctx.drawImage(ASSETS[name], x - w/2, y - h/2, w, h);
-    } else {
-      ctx.drawImage(ASSETS[name], x, y, w, h); 
-    }
-  } else if (fallbackFn) {
-    fallbackFn();
-  }
-}
-
-/* -------------------------------------------------------------
- *  2. DATA, ECONOMY & MAP DEFINITIONS
- * ------------------------------------------------------------- */
 const REGIONS = [
-  { id: 'caribbean', name: 'Caribbean Sea', diff: 'Easy', o2Rate: 0.04, enemyCount: 8, style: 'horizontal', cols: 100, rows: 40, colorTop: '#00bcd4', colorBot: '#0277bd', darknessFactor: 0.1 },
-  { id: 'mediterranean', name: 'Mediterranean Sea', diff: 'Medium', o2Rate: 0.06, enemyCount: 12, style: 'balanced', cols: 60, rows: 60, colorTop: '#00838f', colorBot: '#004d40', darknessFactor: 0.4 },
-  { id: 'indian', name: 'Indian Ocean', diff: 'Medium', o2Rate: 0.07, enemyCount: 12, style: 'horizontal', cols: 80, rows: 50, colorTop: '#1565c0', colorBot: '#0d47a1', darknessFactor: 0.5 },
-  { id: 'atlantic', name: 'Atlantic Ocean', diff: 'Hard', o2Rate: 0.10, enemyCount: 18, style: 'vertical', cols: 35, rows: 120, colorTop: '#283593', colorBot: '#000000', darknessFactor: 1.5 },
-  { id: 'pacific', name: 'Pacific Ocean', diff: 'Hard', o2Rate: 0.12, enemyCount: 20, style: 'balanced', cols: 80, rows: 100, colorTop: '#1a237e', colorBot: '#000000', darknessFactor: 1.2 }
+  { id: 'caribbean', name: 'Caribbean Sea', diff: 'Easy', o2Rate: 0.04, enemyCount: 8, style: 'horizontal', cols: 100, rows: 40, colorTop: '#00bcd4', colorBot: '#0277bd', darknessFactor: 0.1, rockColor: '#00695c', coralColor: '#c2185b' },
+  { id: 'mediterranean', name: 'Mediterranean Sea', diff: 'Medium', o2Rate: 0.06, enemyCount: 12, style: 'balanced', cols: 60, rows: 60, colorTop: '#00838f', colorBot: '#004d40', darknessFactor: 0.4, rockColor: '#3e2723', coralColor: '#bf360c' },
+  { id: 'indian', name: 'Indian Ocean', diff: 'Medium', o2Rate: 0.07, enemyCount: 12, style: 'horizontal', cols: 80, rows: 50, colorTop: '#1565c0', colorBot: '#0d47a1', darknessFactor: 0.5, rockColor: '#1a237e', coralColor: '#4a148c' },
+  { id: 'atlantic', name: 'Atlantic Ocean', diff: 'Hard', o2Rate: 0.10, enemyCount: 18, style: 'vertical', cols: 35, rows: 120, colorTop: '#283593', colorBot: '#000000', darknessFactor: 1.5, rockColor: '#102027', coralColor: '#263238' },
+  { id: 'pacific', name: 'Pacific Ocean', diff: 'Hard', o2Rate: 0.12, enemyCount: 20, style: 'balanced', cols: 80, rows: 100, colorTop: '#1a237e', colorBot: '#000000', darknessFactor: 1.2, rockColor: '#004d40', coralColor: '#827717' }
 ];
 
 const SHOP_ITEMS = [
@@ -152,721 +186,1146 @@ const SHOP_ITEMS = [
   { id: 'flashlight_2', name: 'Xenon Searchlight (Wider/Brighter)', costGold: 0, costRelics: 3, requires: 'flashlight', type: 'gear' },
   { id: 'charge_capacity_1', name: 'Mine Pouch I (+3 Mines Capacity)', costGold: 0, costRelics: 2, type: 'gear' },
   { id: 'charge_capacity_2', name: 'Mine Pouch II (+3 Mines Capacity)', costGold: 0, costRelics: 3, requires: 'charge_capacity_1', type: 'gear' },
-  { id: 'suit_pink', name: 'Neon Pink Wetsuit (Cosmetic)', costGold: 450, costRelics: 0, type: 'suit', color: '#e91e63' },
-  { id: 'suit_blue', name: 'Cobalt Blue Wetsuit (Cosmetic)', costGold: 450, costRelics: 0, type: 'suit', color: '#1e88e5' },
+  { id: 'upgrade_degaussed', name: 'Electromagnetic Degausser (Mine Stealth)', costGold: 1000, costRelics: 2, type: 'gear' },
+  { id: 'suit_pink', name: 'Neon Pink Wetsuit (Cosmetic)', costGold: 1000, costRelics: 0, type: 'suit', color: '#e91e63' },
+  { id: 'suit_blue', name: 'Cobalt Blue Wetsuit (Cosmetic)', costGold: 1000, costRelics: 0, type: 'suit', color: '#1e88e5' },
   { id: 'suit_default', name: 'Standard Brass Wetsuit', costGold: 0, costRelics: 0, type: 'suit', color: '#ffab00' }
 ];
 
-let gameState = { gold: 0, relicsFound: {}, spentRelics: 0, completedRegions: [], purchasedUpgrades: ['suit_default'], activeSuit: 'suit_default' };
-let preDiveState = null; 
-let isPaused = false;
+const ASSET_MAP = {
+  'diver_still': 'sprite-diver-still', 'diver_swim': 'sprite-diver-jump', 'diver_aim_fwd': 'sprite-diver-aim-fwd', 'diver_aim_up': 'sprite-diver-aim-up',
+  'diver_pink_still': 'sprite-diver-pink-still', 'diver_pink_swim': 'sprite-diver-pink-jump', 'diver_pink_aim_fwd': 'sprite-diver-pink-aim-fwd', 'diver_pink_aim_up': 'sprite-diver-pink-aim-up',
+  'diver_blue_still': 'sprite-diver-blue-still', 'diver_blue_swim': 'sprite-diver-blue-jump', 'diver_blue_aim_fwd': 'sprite-diver-blue-aim-fwd', 'diver_blue_aim_up': 'sprite-diver-blue-aim-up',
+  'skeleton': 'sprite-sailor-skeleton', 'shark': 'sprite-shark', 'angler_unlit': 'sprite-angler-unlit', 'angler_lit': 'sprite-angler-lit', 'eel': 'sprite-electric-eel', 'squid': 'sprite-squid', 'ghost': 'sprite-pirate-ghost',
+  'rock_1': 'coral-indestruct-1', 'rock_2': 'coral-indestruct-2', 'rock_3': 'coral-indestruct-3', 'rock_4': 'coral-indestruct-4',
+  'coral_1': 'coral-destruct-1', 'coral_2': 'coral-destruct-2', 'coral_3': 'coral-destruct-3', 'coral_4': 'coral-destruct-4',
+  'relic_1': 'object-treasure-chest', 'relic_2': 'object-teasure-bust', 'relic_3': 'object-treature-crown', 'treasure': 'object-coins',
+  'o2': 'object-o2-tank', 'ammo': 'object-explosive-crate', 'charge': 'object-depth-charge', 'sea_mine': 'object-sea-mine',
+  'ship': 'ship', 'wreck': 'wreck'
+};
 
-function loadSave() {
-  const data = localStorage.getItem('abyssal_save_v13');
-  if (data) { try { gameState = JSON.parse(data); } catch(e){} }
-  if (gameState.spentRelics === undefined) gameState.spentRelics = 0;
-  if (!gameState.purchasedUpgrades.includes('suit_default')) gameState.purchasedUpgrades.push('suit_default');
-  if (!gameState.activeSuit) gameState.activeSuit = 'suit_default';
-  REGIONS.forEach(r => { if (!gameState.relicsFound[r.id]) gameState.relicsFound[r.id] = []; });
+class AudioManager {
+  static SFX = {};
+  static MUSIC = {};
+  static currentBGM = null;
+  static shootCounter = 0;
+  static chokeTimer = 0;
+
+  static init() {
+    const sfxFiles = ['heal_1', 'chest_open', 'pickup-coin', 'pickup-relic', 'menu-select', 'update-success', 'sprite-hurt', 'diver-hurt', 'long-explosion', 'short-explosion', 'shoot', 'level_up', 'dive-failure', 'menu-error', 'armed-charge'];
+    sfxFiles.forEach(file => {
+      let aud = new Audio(`assets/audio/${file}.wav`);
+      aud.volume = 0.6;
+      this.SFX[file] = aud;
+    });
+
+    const musicFiles = ['Tide_at_Twilight', 'Coconut_Coast_Jump', 'Steps_Above_The_Sea', 'Tides_of_the_Red_Isle', 'Tidal_Blade_Duel', 'Cannonade_at_High_Tide'];
+    musicFiles.forEach(file => {
+      let aud = new Audio(`assets/audio/${file}.webm`);
+      aud.loop = true;
+      aud.volume = 0.4;
+      this.MUSIC[file] = aud;
+    });
+  }
+
+  static playSFX(key, force = false) {
+    if (!this.SFX[key]) return;
+    
+    if (key === 'shoot' && !force) {
+      this.shootCounter++;
+      if (this.shootCounter % 3 !== 0) return;
+    }
+
+    let sound = this.SFX[key].cloneNode();
+    sound.volume = this.SFX[key].volume;
+    sound.play().catch(e => console.warn("Audio blocked:", e));
+  }
+
+  static playMusic(key) {
+    if (this.currentBGM && this.currentBGM.src.includes(key)) {
+      this.currentBGM.volume = 0.4; 
+      return;
+    }
+    if (this.currentBGM) {
+      this.currentBGM.pause();
+      this.currentBGM.currentTime = 0;
+    }
+    if (this.MUSIC[key]) {
+      this.currentBGM = this.MUSIC[key];
+      this.currentBGM.volume = 0.4;
+      this.currentBGM.play().catch(e => console.warn("BGM blocked:", e));
+    }
+  }
+
+  static setMusicVolume(vol) {
+    if (this.currentBGM) this.currentBGM.volume = vol;
+  }
 }
 
-function saveState() { localStorage.setItem('abyssal_save_v13', JSON.stringify(gameState)); }
-function totalRelicsFound() { return Object.values(gameState.relicsFound).reduce((acc, arr) => acc + arr.length, 0); }
+class UIManager {
+  static showModal(title, text, isConfirm = false) {
+    return new Promise(resolve => {
+      document.getElementById('msgTitle').innerText = title;
+      document.getElementById('msgText').innerHTML = text;
+      document.getElementById('messageBoxOverlay').classList.remove('hidden');
+      
+      const confirmBtn = document.getElementById('msgConfirmBtn');
+      const cancelBtn = document.getElementById('msgCancelBtn');
+      
+      cancelBtn.classList.toggle('hidden', !isConfirm);
 
-/* -------------------------------------------------------------
- *  3. GAME ENTITIES & WORLD VARS
- * ------------------------------------------------------------- */
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const TILE_SIZE = 40;
+      const cleanup = () => {
+        document.getElementById('messageBoxOverlay').classList.add('hidden');
+        confirmBtn.onclick = null; cancelBtn.onclick = null;
+      };
 
-const lightCanvas = document.createElement('canvas');
-lightCanvas.width = 960; lightCanvas.height = 600;
-const lightCtx = lightCanvas.getContext('2d');
+      confirmBtn.onclick = () => { cleanup(); resolve(true); };
+      cancelBtn.onclick = () => { cleanup(); resolve(false); };
+    });
+  }
+}
 
-let activeRegion = null, cameraX = 0, cameraY = 0;
-let keys = {}, mouse = { x: 0, y: 0, worldX: 0, worldY: 0 };
-let screenShake = 0, hasDescended = false, relicsThisDive = 0;
+class SaveManager {
+  // Use a getter to ensure a deep copy of the default state arrays is returned every time
+  static get DEFAULT_STATE() {
+    return { 
+      gold: 0, 
+      relicsFound: {}, 
+      spentRelics: 0, 
+      completedRegions: [], 
+      purchasedUpgrades: ['suit_default'], 
+      activeSuit: 'suit_default' 
+    };
+  }
 
-let diver = null;
-let mapGrid = [], projectiles = [], depthCharges = [], particles = [], floaters = [], enemies = [], relics = [], treasures = [], o2Stations = [], ammoDrops = [], seaMines = [];
-
-/* -------------------------------------------------------------
- *  4. PROCEDURAL GENERATION & BIOMES
- * ------------------------------------------------------------- */
-function initLevel(region) {
-  preDiveState = JSON.parse(JSON.stringify(gameState));
-
-  activeRegion = region;
-  mapGrid = []; projectiles = []; depthCharges = []; particles = []; floaters = []; enemies = []; relics = []; treasures = []; o2Stations = []; ammoDrops = []; seaMines = [];
-  hasDescended = false; relicsThisDive = 0; cameraX = 0; cameraY = 0;
-
-  const hasExtraO2 = gameState.purchasedUpgrades.includes('tank_upgrade');
-  const hasExtraHP = gameState.purchasedUpgrades.includes('wetsuit_armor');
-  
-  let maxC = 3;
-  if (gameState.purchasedUpgrades.includes('charge_capacity_1')) maxC += 3;
-  if (gameState.purchasedUpgrades.includes('charge_capacity_2')) maxC += 3;
-
-  diver = {
-    x: (region.cols * TILE_SIZE) / 2, y: 120, 
-    vx: 0, vy: 0, w: 24, h: 36,
-    maxHp: hasExtraHP ? 200 : 100, hp: hasExtraHP ? 200 : 100,
-    maxO2: hasExtraO2 ? 150 : 100, o2: hasExtraO2 ? 150 : 100,
-    maxCharges: maxC, charges: maxC, 
-    angle: Math.PI / 2, invuln: 0
-  };
-
-  // Organic Multi-Frequency Terrain Generation
-  for (let r = 0; r < region.rows; r++) {
-    mapGrid[r] = [];
-    for (let c = 0; c < region.cols; c++) {
-      if (c === 0 || c === region.cols - 1 || r === region.rows - 1) {
-        mapGrid[r][c] = 10 + Math.floor(Math.random() * 4) + 1; 
-      } else if (r < 4) {
-        mapGrid[r][c] = 0; 
-      } else {
-        // Blended overlapping frequencies for natural continent/trench structures
-        let scaleX = region.style === 'horizontal' ? 0.15 : 0.08;
-        let scaleY = region.style === 'horizontal' ? 0.08 : 0.15;
+  static load() {
+    let state = this.DEFAULT_STATE;
+    try {
+      const data = localStorage.getItem('abyssal_save_v18_refactored');
+      if (data) {
+        const parsed = JSON.parse(data);
+        // Schema Validation / Merge
+        state = { ...this.DEFAULT_STATE, ...parsed };
+        state.purchasedUpgrades = Array.isArray(parsed.purchasedUpgrades) ? parsed.purchasedUpgrades : ['suit_default'];
         
-        let n = Math.sin(c * scaleX) * Math.cos(r * scaleY) * 2.5 
-              + Math.sin(c * 0.04) * 1.5 
-              + Math.cos(r * 0.05) * 1.5 
-              + Math.sin(c * 0.3 + r * 0.3) * 0.5;
-
-        // Grit randomization to break perfect edges
-        n += (Math.random() * 0.4 - 0.2);
-
-        if (n > 1.2) {
-          let isCoral = Math.random() < 0.25;
-          mapGrid[r][c] = (isCoral ? 20 : 10) + Math.floor(Math.random() * 4) + 1;
-        } else {
-          mapGrid[r][c] = 0;
-        }
-      }
-    }
-  }
-
-  // Carve Main Structural Path (Prevents completely blocked map)
-  let pC = Math.floor(region.cols / 2);
-  for (let r = 2; r < region.rows - 2; r++) {
-    if (region.style === 'horizontal') pC += (Math.random() > 0.3 ? 1 : -1) * Math.floor(Math.random() * 3);
-    else pC += Math.floor(Math.random() * 3) - 1;
-    
-    pC = Math.max(3, Math.min(region.cols - 4, pC));
-    for (let dc = -3; dc <= 3; dc++) {
-      if (mapGrid[r][pC + dc]) mapGrid[r][pC + dc] = Math.random() < 0.15 ? 20 + Math.floor(Math.random() * 4) + 1 : 0;
-    }
-  }
-
-  const savedRelics = gameState.relicsFound[region.id] || [];
-  let placed = 0;
-
-  // Shipwreck Generation
-  let wrecksToPlace = (region.diff === 'Medium' || region.diff === 'Hard') ? (Math.random() > 0.5 ? 2 : 1) : 0;
-  let placedWrecks = 0;
-  let placedWreckRelics = 0;
-
-  while(placedWrecks < wrecksToPlace) {
-    let wWidth = 12;
-    let wHeight = 6;
-    let wx = Math.floor(Math.random() * (region.cols - wWidth - 4)) + 2;
-    let wy = region.rows - 8 - (placedWrecks * 10); 
-    
-    for(let r = 0; r < wHeight; r++) {
-      for(let c = 0; c < wWidth; c++) {
-        let gridY = Math.min(wy + r, region.rows - 2);
-        let gridX = wx + c;
-        if(r === 0 || r === wHeight - 1 || c === 0 || c === wWidth - 1) {
-          if ((r === 0 && (c === 5 || c === 6)) || (c === 0 && r >= 3) || (c === wWidth - 1 && r >= 3)) {
-            mapGrid[gridY][gridX] = 20 + Math.floor(Math.random() * 4) + 1; 
-          } else {
-            mapGrid[gridY][gridX] = 31; // Indestructible wreck tile
-          }
-        } else {
-          mapGrid[gridY][gridX] = 0; // Hollow inside
-        }
-      }
-    }
-    
-    // Spawn relic in wreck
-    if (placedWreckRelics < 2 && placed < 6) {
-      relics.push({ id: placed, x: (wx + 6) * TILE_SIZE + 20, y: (wy + 4) * TILE_SIZE + 20, collected: savedRelics.includes(placed) });
-      placed++; placedWreckRelics++;
-    }
-    
-    // Wreck Guardians
-    let localPool = region.diff === 'Hard' ? ['skeleton', 'ghost', 'shark', 'angler'] : ['skeleton', 'shark', 'angler'];
-    let attempt = 0, placedEn = 0;
-    while(placedEn < 4 && attempt < 50) {
-      let rC = wx - 4 + Math.floor(Math.random() * (wWidth + 8));
-      let rR = wy - 4 + Math.floor(Math.random() * (wHeight + 8));
-      if (rC > 1 && rC < region.cols - 2 && rR > 4 && rR < region.rows - 2) {
-        if (mapGrid[rR][rC] === 0) {
-           let type = localPool[Math.floor(Math.random()*localPool.length)];
-           let hp = (type === 'shark') ? 3 : (type === 'ghost' || type === 'skeleton' ? 4 : 2);
-           let size = (type === 'shark') ? 22 : (type === 'ghost' || type === 'skeleton' ? 18 : 14);
-           let aggro = (type === 'ghost' || type === 'skeleton') ? 250 : 200;
-           enemies.push({ type, x: rC * TILE_SIZE + 20, y: rR * TILE_SIZE + 20, vx: 0, vy: 0, hp, size, aggro });
-           placedEn++;
-        }
-      }
-      attempt++;
-    }
-    placedWrecks++;
-  }
-
-  // Standard Relics (Drill path logic)
-  while (placed < 6) {
-    const rC = Math.floor(Math.random() * (region.cols - 10)) + 5;
-    const rR = Math.floor(Math.random() * (region.rows - 12)) + 8;
-    if (mapGrid[rR][rC] === 0 || mapGrid[rR][rC] === 31) continue; 
-    
-    mapGrid[rR][rC] = 20 + Math.floor(Math.random() * 4) + 1; 
-    relics.push({ id: placed, x: rC * TILE_SIZE + 20, y: rR * TILE_SIZE + 20, collected: savedRelics.includes(placed) });
-    
-    let dir = rC > region.cols / 2 ? -1 : 1;
-    let cx = rC + dir;
-    while (cx > 1 && cx < region.cols - 2) {
-      if (mapGrid[rR][cx] === 0) break; 
-      if (mapGrid[rR][cx] !== 31) mapGrid[rR][cx] = 20 + Math.floor(Math.random() * 4) + 1; 
-      cx += dir;
-    }
-    placed++;
-  }
-
-  // Items & Consumables
-  for (let i = 0; i < region.cols; i++) {
-    const cC = Math.floor(Math.random() * (region.cols - 4)) + 2;
-    const cR = Math.floor(Math.random() * (region.rows - 8)) + 6;
-    if (mapGrid[cR][cC] === 0) {
-      let rand = Math.random();
-      if (rand < 0.7) treasures.push({ x: cC * TILE_SIZE + 20, y: cR * TILE_SIZE + 20, value: 20 + Math.floor(Math.random()*30), consumed: false });
-      else if (rand < 0.85) o2Stations.push({ x: cC * TILE_SIZE + 20, y: cR * TILE_SIZE + 20, consumed: false });
-      else ammoDrops.push({ x: cC * TILE_SIZE + 20, y: cR * TILE_SIZE + 20, consumed: false });
-    }
-  }
-
-  // Sea Mines
-  for (let i = 0; i < region.cols * 1.5; i++) {
-    const mC = Math.floor(Math.random() * (region.cols - 4)) + 2;
-    const mR = Math.floor(Math.random() * (region.rows - 10)) + 8;
-    if (mapGrid[mR][mC] === 0) {
-      let attached = mapGrid[mR-1][mC] >= 11 || mapGrid[mR+1][mC] >= 11 || mapGrid[mR][mC-1] >= 11 || mapGrid[mR][mC+1] >= 11;
-      if (attached) seaMines.push({ x: mC * TILE_SIZE + 20, y: mR * TILE_SIZE + 20, size: 12 });
-    }
-  }
-
-  // Tiered Ecosystem Enemy Spawning (Safeguarded)
-  const faunasEasy = ['squid', 'eel'];
-  const faunasMid = ['shark', 'angler'];
-  const faunasHard = ['ghost', 'skeleton'];
-
-  let spawnPool = [];
-  if (region.diff === 'Easy') spawnPool = [...faunasEasy];
-  else if (region.diff === 'Medium') spawnPool = [...faunasEasy, ...faunasMid];
-  else spawnPool = [...faunasMid, ...faunasHard];
-
-  let remainingEnemies = Math.max(0, region.enemyCount - enemies.length);
-  let spawned = 0, spawnAttempts = 0;
-  
-  while(spawned < remainingEnemies && spawnAttempts < 1000) {
-    const eC = Math.floor(Math.random() * (region.cols - 4)) + 2;
-    const eR = Math.floor(Math.random() * (region.rows - 8)) + 6;
-    
-    if (mapGrid[eR][eC] === 0) {
-      let type = spawnPool[Math.floor(Math.random() * spawnPool.length)];
-      let hp = 2, size = 16, aggro = 200;
-      
-      if (type === 'shark') { hp = 3; size = 22; }
-      if (type === 'ghost' || type === 'skeleton') { hp = 4; size = 18; aggro = 250; }
-      if (type === 'angler') { size = 14; }
-
-      // Added +20 offset so enemy center naturally perfectly aligns with empty tile void 
-      enemies.push({ type, x: eC * TILE_SIZE + 20, y: eR * TILE_SIZE + 20, vx: 0, vy: 0, hp, size, aggro });
-      spawned++;
-    }
-    spawnAttempts++;
-  }
-}
-
-/* -------------------------------------------------------------
- *  5. CORE LOOP & PHYSICS
- * ------------------------------------------------------------- */
-function update() {
-  if (!diver || isPaused) return;
-
-  if (screenShake > 0) screenShake *= 0.85;
-  if (diver.y > 300) hasDescended = true;
-
-  let shipX = (activeRegion.cols * TILE_SIZE) / 2 - 100;
-  if (hasDescended && diver.y < 150 && diver.x >= shipX && diver.x <= shipX + 200) { 
-    endDive(true); return; 
-  }
-
-  const accel = 0.3, drag = 0.92, gravity = 0.12;
-  let isMoving = keys['w'] || keys['ArrowUp'] || keys['s'] || keys['ArrowDown'] || keys['a'] || keys['ArrowLeft'] || keys['d'] || keys['ArrowRight'];
-
-  if (!isMoving) diver.vy += gravity;
-  
-  if (keys['w'] || keys['ArrowUp']) diver.vy -= accel;
-  if (keys['s'] || keys['ArrowDown']) diver.vy += accel;
-  if (keys['a'] || keys['ArrowLeft']) diver.vx -= accel;
-  if (keys['d'] || keys['ArrowRight']) diver.vx += accel;
-  diver.vx *= drag; diver.vy *= drag;
-
-  if (!isSolid(diver.x + diver.vx, diver.y)) diver.x += diver.vx; else diver.vx = 0;
-  if (!isSolid(diver.x, diver.y + diver.vy)) diver.y += diver.vy; else diver.vy = 0;
-
-  diver.angle = Math.atan2(mouse.worldY - diver.y, mouse.worldX - diver.x);
-  diver.o2 = Math.max(0, diver.o2 - activeRegion.o2Rate);
-  if (diver.o2 <= 0) diver.hp -= 0.15;
-  if (diver.invuln > 0) diver.invuln--;
-
-  cameraX = Math.max(0, Math.min(diver.x - canvas.width / 2, activeRegion.cols * TILE_SIZE - canvas.width));
-  cameraY = Math.max(0, Math.min(diver.y - canvas.height / 2, activeRegion.rows * TILE_SIZE - canvas.height));
-  mouse.worldX = mouse.x + cameraX; mouse.worldY = mouse.y + cameraY;
-
-  o2Stations.forEach(st => {
-    if (!st.consumed && Math.hypot(diver.x - st.x, diver.y - st.y) < 25) {
-      st.consumed = true; diver.o2 = Math.min(diver.maxO2, diver.o2 + 50);
-      spawnText(st.x, st.y, "+OXYGEN", "#00e5ff");
-    }
-  });
-
-  ammoDrops.forEach(ammo => {
-    if (!ammo.consumed && Math.hypot(diver.x - ammo.x, diver.y - ammo.y) < 25) {
-      if (diver.charges < diver.maxCharges) {
-        ammo.consumed = true; 
-        let gained = Math.min(2, diver.maxCharges - diver.charges);
-        diver.charges += gained;
-        spawnText(ammo.x, ammo.y, `+${gained} MINES`, "#e53935");
-      }
-    }
-  });
-
-  relics.forEach(r => {
-    if (!r.collected && Math.hypot(diver.x - r.x, diver.y - r.y) < 30) {
-      r.collected = true; relicsThisDive++;
-      if (!gameState.relicsFound[activeRegion.id].includes(r.id)) gameState.relicsFound[activeRegion.id].push(r.id);
-      spawnText(r.x, r.y, "RELIC FOUND!", "#ffd700"); saveState();
-      if (relicsThisDive + (gameState.relicsFound[activeRegion.id].length - relicsThisDive) === 6) {
-        setTimeout(() => endDive(true), 1500); 
-      }
-    }
-  });
-
-  treasures.forEach(t => {
-    if (!t.consumed && Math.hypot(diver.x - t.x, diver.y - t.y) < 25) {
-      t.consumed = true; gameState.gold += t.value; saveState();
-      spawnText(t.x, t.y, `+${t.value}g`, "#38ef7d");
-    }
-  });
-
-  for (let i = seaMines.length - 1; i >= 0; i--) {
-    let m = seaMines[i];
-    if (Math.hypot(diver.x - m.x, diver.y - m.y) < m.size + 12 && diver.invuln <= 0) {
-      diver.hp -= 30; diver.invuln = 30; screenShake = 15;
-      createParticles(m.x, m.y, 'blast', 20);
-      seaMines.splice(i, 1);
-    }
-  }
-
-  for (let i = projectiles.length - 1; i >= 0; i--) {
-    let p = projectiles[i]; p.x += p.vx; p.y += p.vy; p.life--;
-    if (isSolid(p.x, p.y) || p.life <= 0) { projectiles.splice(i, 1); continue; }
-    
-    let p_destroyed = false;
-    
-    for (let e = enemies.length - 1; e >= 0; e--) {
-      let en = enemies[e];
-      if (Math.hypot(p.x - en.x, p.y - en.y) < en.size) {
-        en.hp -= 1; projectiles.splice(i, 1); p_destroyed = true;
-        if (en.hp <= 0) { createParticles(en.x, en.y, 'blood', 10); enemies.splice(e, 1); }
-        break;
-      }
-    }
-    
-    if (p_destroyed) continue;
-
-    for (let m = seaMines.length - 1; m >= 0; m--) {
-      if (Math.hypot(p.x - seaMines[m].x, p.y - seaMines[m].y) < seaMines[m].size + 4) {
-        createParticles(seaMines[m].x, seaMines[m].y, 'blast', 15);
-        screenShake = 6;
-        seaMines.splice(m, 1);
-        projectiles.splice(i, 1);
-        break;
-      }
-    }
-  }
-
-  enemies.forEach(en => {
-    let dist = Math.hypot(diver.x - en.x, diver.y - en.y);
-    if (dist < en.aggro) {
-      let ang = Math.atan2(diver.y - en.y, diver.x - en.x);
-      en.vx += Math.cos(ang) * 0.2; en.vy += Math.sin(ang) * 0.2;
-    }
-    en.vx *= 0.95; en.vy *= 0.95;
-    if (!isSolid(en.x + en.vx, en.y)) en.x += en.vx;
-    if (!isSolid(en.x, en.y + en.vy)) en.y += en.vy;
-    if (dist < en.size + 12 && diver.invuln <= 0) {
-      diver.hp -= 25; diver.invuln = 40; screenShake = 10; createParticles(diver.x, diver.y, 'blood', 5);
-    }
-  });
-
-  depthCharges.forEach((dc, i) => {
-    if (!isSolid(dc.x, dc.y + dc.vy)) dc.y += dc.vy; 
-    dc.timer--;
-    if (dc.timer <= 0) { detonateCharge(dc.x, dc.y); depthCharges.splice(i, 1); }
-  });
-
-  particles.forEach((pt, i) => { pt.x += pt.vx; pt.y += pt.vy; pt.life--; if (pt.life <= 0) particles.splice(i, 1); });
-  floaters.forEach((fl, i) => { fl.y -= 0.5; fl.life--; if (fl.life <= 0) floaters.splice(i, 1); });
-
-  if (diver.hp <= 0) { 
-    gameState = JSON.parse(JSON.stringify(preDiveState));
-    saveState();
-    alert("DIVER LOST. Rescue team recovered you, but all salvage and data from this dive were lost."); 
-    returnToHub(); 
-  }
-}
-
-function isSolid(x, y) {
-  let c = Math.floor(x / TILE_SIZE), r = Math.floor(y / TILE_SIZE);
-  if (c < 0 || c >= activeRegion.cols || r < 0 || r >= activeRegion.rows) return true;
-  return mapGrid[r][c] >= 11;
-}
-
-function detonateCharge(x, y) {
-  screenShake = 18;
-  const radius = 100;
-  let minC = Math.max(0, Math.floor((x - radius)/TILE_SIZE)), maxC = Math.min(activeRegion.cols-1, Math.floor((x + radius)/TILE_SIZE));
-  let minR = Math.max(0, Math.floor((y - radius)/TILE_SIZE)), maxR = Math.min(activeRegion.rows-1, Math.floor((y + radius)/TILE_SIZE));
-  
-  for (let r = minR; r <= maxR; r++) {
-    for (let c = minC; c <= maxC; c++) {
-      if (mapGrid[r][c] >= 21 && mapGrid[r][c] <= 24) { 
-        mapGrid[r][c] = 0; createParticles(c*TILE_SIZE+20, r*TILE_SIZE+20, 'rock', 3); 
-      }
-    }
-  }
-  
-  if (Math.hypot(x - diver.x, y - diver.y) < radius) { diver.hp -= 40; diver.invuln = 20; }
-  
-  for (let i = enemies.length - 1; i >= 0; i--) {
-    if (Math.hypot(x - enemies[i].x, y - enemies[i].y) < radius) {
-      enemies[i].hp -= 5;
-      if (enemies[i].hp <= 0) {
-        createParticles(enemies[i].x, enemies[i].y, 'blood', 15);
-        enemies.splice(i, 1);
-      }
-    }
-  }
-
-  for (let i = seaMines.length - 1; i >= 0; i--) {
-    if (Math.hypot(x - seaMines[i].x, y - seaMines[i].y) < radius) {
-      createParticles(seaMines[i].x, seaMines[i].y, 'blast', 15);
-      seaMines.splice(i, 1);
-    }
-  }
-
-  createParticles(x, y, 'blast', 20);
-}
-
-function createParticles(x, y, type, count) {
-  for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, life: 30 + Math.random()*20, type });
-}
-function spawnText(x, y, text, color) { floaters.push({ x, y, text, color, life: 60 }); }
-
-/* -------------------------------------------------------------
- *  6. RENDERING ENGINE & LIGHTING
- * ------------------------------------------------------------- */
-function render() {
-  if (!diver) return; 
-
-  ctx.save();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (screenShake > 0) ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
-  
-  // Base Gradient Background
-  let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  grad.addColorStop(0, activeRegion.colorTop); grad.addColorStop(1, activeRegion.colorBot);
-  ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.save();
-  ctx.translate(-cameraX, -cameraY);
-
-  let shipX = (activeRegion.cols * TILE_SIZE) / 2 - 100;
-  drawSprite('ship', shipX + 100, 90, 200, 100, () => {
-    ctx.fillStyle = '#455a64'; ctx.beginPath(); ctx.moveTo(shipX, 40); ctx.lineTo(shipX + 200, 40);
-    ctx.lineTo(shipX + 160, 140); ctx.lineTo(shipX + 40, 140); ctx.fill();
-    ctx.fillStyle = '#ffb300'; ctx.fillRect(shipX + 70, 0, 60, 40);
-  });
-
-  let rockColor = activeRegion.id === 'caribbean' ? '#00695c' : '#102027';
-  let coralColor = activeRegion.id === 'caribbean' ? '#c2185b' : '#4e342e';
-  
-  for (let r = 0; r < activeRegion.rows; r++) {
-    for (let c = 0; c < activeRegion.cols; c++) {
-      let tile = mapGrid[r][c], tx = c * TILE_SIZE, ty = r * TILE_SIZE;
-      if (tx+TILE_SIZE < cameraX || tx > cameraX+canvas.width || ty+TILE_SIZE < cameraY || ty > cameraY+canvas.height) continue;
-      
-      if (tile >= 11 && tile <= 14) {
-        drawSprite(`rock_${tile - 10}`, tx, ty, TILE_SIZE, TILE_SIZE, () => {
-          ctx.fillStyle = rockColor; ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-        });
-      }
-      else if (tile >= 21 && tile <= 24) {
-        drawSprite(`coral_${tile - 20}`, tx, ty, TILE_SIZE, TILE_SIZE, () => {
-          ctx.fillStyle = coralColor; ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-          ctx.strokeStyle = '#212121'; ctx.strokeRect(tx, ty, TILE_SIZE, TILE_SIZE);
-        });
-      }
-      else if (tile === 31) {
-        drawSprite('wreck', tx, ty, TILE_SIZE, TILE_SIZE, () => {
-          ctx.fillStyle = '#4e342e'; ctx.fillRect(tx, ty, TILE_SIZE, TILE_SIZE);
-          ctx.strokeStyle = '#3e2723'; ctx.strokeRect(tx, ty, TILE_SIZE, TILE_SIZE);
-          ctx.beginPath(); ctx.moveTo(tx, ty + 10); ctx.lineTo(tx + TILE_SIZE, ty + 10);
-          ctx.moveTo(tx, ty + 30); ctx.lineTo(tx + TILE_SIZE, ty + 30); ctx.stroke();
-        });
-      }
-    }
-  }
-
-  o2Stations.forEach(st => { if (!st.consumed) {
-    drawSprite('o2', st.x, st.y, 16, 16, () => {
-      ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(st.x, st.y, 8, 0, Math.PI*2); ctx.fill();
-    });
-  }});
-  
-  ammoDrops.forEach(am => { if (!am.consumed) { 
-    drawSprite('ammo', am.x, am.y, 16, 16, () => {
-      ctx.fillStyle = '#e53935'; ctx.fillRect(am.x-8, am.y-8, 16, 16); ctx.fillStyle = '#fff'; ctx.fillRect(am.x-4, am.y-2, 8, 4);
-    });
-  }});
-  
-  relics.forEach(r => { if (!r.collected) { 
-    drawSprite('relic', r.x, r.y, 20, 20, () => {
-      ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(r.x, r.y, 10, 0, Math.PI*2); ctx.fill();
-    });
-  }});
-  
-  treasures.forEach(t => { if (!t.consumed) { 
-    drawSprite('treasure', t.x, t.y, 12, 12, () => {
-      ctx.fillStyle = '#ffca28'; ctx.fillRect(t.x-6, t.y-6, 12, 12);
-    });
-  }});
-
-  seaMines.forEach(m => {
-    drawSprite('sea_mine', m.x, m.y, 24, 24, () => {
-      ctx.fillStyle = '#ff1744'; ctx.beginPath(); ctx.arc(m.x, m.y, m.size, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#212121'; ctx.fillRect(m.x-3, m.y-3, 6, 6);
-    });
-  });
-  
-  depthCharges.forEach(dc => { 
-    drawSprite('charge', dc.x, dc.y, 16, 16, () => {
-      ctx.fillStyle = '#e53935'; ctx.beginPath(); ctx.arc(dc.x, dc.y, 8, 0, Math.PI*2); ctx.fill(); 
-    });
-    if (Math.floor(dc.timer / 8) % 2 === 0) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.beginPath(); ctx.arc(dc.x, dc.y, 4, 0, Math.PI*2); ctx.fill();
-    }
-  });
-  
-  enemies.forEach(en => {
-    ctx.save(); ctx.translate(en.x, en.y);
-    let w = en.size * 2, h = en.size * 2;
-    if (en.type === 'shark') { w = 44; h = 20; }
-    if (en.type === 'ghost' || en.type === 'skeleton') { w = 24; h = 36; }
-    
-    drawSprite(en.type, 0, 0, w, h, () => {
-      if (en.type === 'shark') { ctx.fillStyle = '#78909c'; ctx.beginPath(); ctx.ellipse(0, 0, 22, 10, 0,0,Math.PI*2); ctx.fill(); }
-      else { ctx.fillStyle = '#8e24aa'; ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill(); }
-    });
-    ctx.restore();
-  });
-
-  ctx.strokeStyle = '#00e676'; ctx.lineWidth = 3;
-  projectiles.forEach(p => { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x-p.vx, p.y-p.vy); ctx.stroke(); });
-
-  particles.forEach(pt => { ctx.fillStyle = pt.type==='blast'?'#ff9800':(pt.type==='blood'?'#d32f2f':'#8d6e63'); ctx.fillRect(pt.x, pt.y, 4, 4); });
-  floaters.forEach(fl => { ctx.fillStyle = fl.color; ctx.font = 'bold 12px sans-serif'; ctx.fillText(fl.text, fl.x, fl.y); });
-
-  if (diver.invuln % 6 < 3) {
-    ctx.save(); ctx.translate(diver.x, diver.y);
-    if (mouse.worldX < diver.x) ctx.scale(-1, 1);
-    
-    let suitColor = '#ffab00'; 
-    let activeSuitData = SHOP_ITEMS.find(i => i.id === gameState.activeSuit);
-    if (activeSuitData && activeSuitData.color) suitColor = activeSuitData.color;
-
-    drawSprite('diver', 0, 0, 32, 38, () => {
-      ctx.fillStyle = suitColor; ctx.fillRect(-10, -14, 20, 28); 
-      ctx.fillStyle = '#ffd54f'; ctx.beginPath(); ctx.arc(0, -14, 10, 0, Math.PI*2); ctx.fill(); 
-      ctx.fillStyle = '#37474f'; ctx.fillRect(0, -3, 16, 6); 
-    });
-    ctx.restore();
-  }
-
-  ctx.restore(); 
-
-  // Lighting Update
-  let depthRatio = Math.max(0, (diver.y - 600) / (activeRegion.rows * TILE_SIZE - 600));
-  let darkness = Math.min(0.96, depthRatio * activeRegion.darknessFactor);
-  
-  if (darkness > 0) {
-    lightCtx.clearRect(0, 0, lightCanvas.width, lightCanvas.height);
-    lightCtx.fillStyle = `rgba(0, 0, 7, ${darkness})`; lightCtx.fillRect(0, 0, lightCanvas.width, lightCanvas.height);
-    
-    let hasLight1 = gameState.purchasedUpgrades.includes('flashlight');
-    let hasLight2 = gameState.purchasedUpgrades.includes('flashlight_2');
-
-    if (hasLight1 || hasLight2) {
-      lightCtx.globalCompositeOperation = 'destination-out';
-      let screenX = diver.x - cameraX, screenY = diver.y - cameraY;
-      
-      let ambRadius = hasLight2 ? 160 : 120;
-      let beamRadius = hasLight2 ? 550 : 400; 
-      let beamSpread = hasLight2 ? 0.6 : 0.45;
-
-      let radGrad = lightCtx.createRadialGradient(screenX, screenY, 0, screenX, screenY, ambRadius);
-      radGrad.addColorStop(0, 'rgba(255,255,255,1)'); radGrad.addColorStop(1, 'rgba(255,255,255,0)');
-      lightCtx.fillStyle = radGrad; lightCtx.beginPath(); lightCtx.arc(screenX, screenY, ambRadius, 0, Math.PI*2); lightCtx.fill();
-
-      let beamGrad = lightCtx.createRadialGradient(screenX, screenY, 50, screenX, screenY, beamRadius);
-      beamGrad.addColorStop(0, 'rgba(255,255,255,0.9)'); beamGrad.addColorStop(1, 'rgba(255,255,255,0)');
-      lightCtx.fillStyle = beamGrad; lightCtx.beginPath(); lightCtx.moveTo(screenX, screenY);
-      lightCtx.arc(screenX, screenY, beamRadius, diver.angle - beamSpread, diver.angle + beamSpread); lightCtx.lineTo(screenX, screenY); lightCtx.fill();
-      lightCtx.globalCompositeOperation = 'source-over'; 
-    }
-    ctx.drawImage(lightCanvas, 0, 0);
-  }
-
-  ctx.fillStyle = 'rgba(5, 15, 30, 0.85)'; ctx.fillRect(10, 10, 340, 80);
-  ctx.fillStyle = '#e0f8ff'; ctx.font = 'bold 12px Courier New';
-  ctx.fillText("OXYGEN", 20, 30); ctx.fillStyle = diver.o2 < 25 ? '#ff1744' : '#00e5ff'; ctx.fillRect(80, 20, (diver.o2/diver.maxO2)*120, 12);
-  ctx.fillStyle = '#e0f8ff'; ctx.fillText("HULL HP", 20, 50); ctx.fillStyle = '#76ff03'; ctx.fillRect(80, 40, (diver.hp/diver.maxHp)*120, 12);
-  ctx.fillStyle = '#ffd700'; ctx.fillText(`RELICS: ${gameState.relicsFound[activeRegion.id]?.length || 0}/6 | MINES: ${diver.charges}/${diver.maxCharges}`, 20, 75);
-  ctx.fillStyle = '#00e5ff'; ctx.font = 'bold 14px Courier New'; ctx.fillText(`DEPTH: ${Math.floor((diver.y-120)/10)}m`, 820, 30);
-
-  if (hasDescended && diver.y < 160) {
-    if (diver.x >= shipX && diver.x <= shipX + 200) {
-      ctx.fillStyle = '#38ef7d'; ctx.font = 'bold 18px Courier'; ctx.fillText("RETURN TO SHIP TO EXTRACT", canvas.width/2 - 120, 80);
-    } else {
-      ctx.fillStyle = '#ffca28'; ctx.font = 'bold 18px Courier'; ctx.fillText("SWIM TO THE SHIP HULL TO EXTRACT", canvas.width/2 - 160, 80);
-      
-      let dist = (shipX + 100) - diver.x; 
-      let ratio = Math.min(1, Math.abs(dist) / 1500); 
-      let greenChannel = Math.floor(215 * (1 - ratio)); 
-      
-      ctx.fillStyle = `rgb(255, ${greenChannel}, 0)`;
-      ctx.beginPath();
-      
-      let arrowX = canvas.width / 2;
-      let arrowY = 110;
-      
-      if (dist > 0) {
-        ctx.moveTo(arrowX - 20, arrowY - 10); ctx.lineTo(arrowX + 10, arrowY - 10);
-        ctx.lineTo(arrowX + 10, arrowY - 20); ctx.lineTo(arrowX + 30, arrowY);
-        ctx.lineTo(arrowX + 10, arrowY + 20); ctx.lineTo(arrowX + 10, arrowY + 10);
-        ctx.lineTo(arrowX - 20, arrowY + 10);
+        // Migration to safely convert previous degaussed suit to gear upgrade
+        let degaussIndex = state.purchasedUpgrades.indexOf('suit_degaussed');
+        if (degaussIndex > -1) state.purchasedUpgrades[degaussIndex] = 'upgrade_degaussed';
+        if (state.activeSuit === 'suit_degaussed') state.activeSuit = 'suit_default';
+        
+        if (!state.purchasedUpgrades.includes('suit_default')) state.purchasedUpgrades.push('suit_default');
       } else {
-        ctx.moveTo(arrowX + 20, arrowY - 10); ctx.lineTo(arrowX - 10, arrowY - 10);
-        ctx.lineTo(arrowX - 10, arrowY - 20); ctx.lineTo(arrowX - 30, arrowY);
-        ctx.lineTo(arrowX - 10, arrowY + 20); ctx.lineTo(arrowX - 10, arrowY + 10);
-        ctx.lineTo(arrowX + 20, arrowY + 10);
+        // Migration from old unrefactored version if it exists
+        const oldData = localStorage.getItem('abyssal_save_v18');
+        if(oldData) {
+          const parsedOld = JSON.parse(oldData);
+          state = { ...this.DEFAULT_STATE, ...parsedOld };
+          this.save(state);
+        }
       }
-      ctx.fill();
+    } catch(e) { console.error("Corrupted save file. Resetting to defaults.", e); }
+    
+    // ALWAYS initialize region relic arrays (fixes crash on fresh saves)
+    REGIONS.forEach(r => { if (!state.relicsFound[r.id]) state.relicsFound[r.id] = []; });
+    
+    return state;
+  }
+  static save(state) { localStorage.setItem('abyssal_save_v18_refactored', JSON.stringify(state)); }
+}
+
+class AssetManager {
+  static ASSETS = {};
+  
+  static init() {
+    const promises = Object.keys(ASSET_MAP).map(key => {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.src = `assets/${ASSET_MAP[key]}.png`;
+        img.onload = () => { this.ASSETS[key] = img; resolve(); };
+        img.onerror = () => { 
+          // Silently fail but resolve so game still starts, fallback geometry will draw
+          this.ASSETS[key] = null; 
+          resolve(); 
+        };
+      });
+    });
+    return Promise.all(promises);
+  }
+
+  static draw(ctx, key, x, y, w, h, fallbackFn) {
+    const img = this.ASSETS[key];
+    if (img && img.complete && img.naturalWidth !== 0) {
+      if (fallbackFn && key !== 'wreck' && !key.includes('rock') && !key.includes('coral')) {
+        ctx.drawImage(img, x - w/2, y - h/2, w, h); // Centered rendering
+      } else {
+        ctx.drawImage(img, x, y, w, h); // Top-left rendering
+      }
+    } else if (fallbackFn) {
+      fallbackFn(ctx, x, y, w, h);
+    }
+  }
+}
+
+class InputManager {
+  static keys = {};
+  static mouse = { x: 0, y: 0, worldX: 0, worldY: 0, clickDown: false };
+  
+  static init(canvas) {
+    window.addEventListener('keydown', e => this.keys[e.key] = true);
+    window.addEventListener('keyup', e => this.keys[e.key] = false);
+    // Crucial fix: clear keys on blur so they don't "stick" when tabbing out
+    window.addEventListener('blur', () => this.keys = {}); 
+    
+    canvas.addEventListener('mousemove', e => {
+      const r = canvas.getBoundingClientRect(); 
+      this.mouse.x = e.clientX - r.left; 
+      this.mouse.y = e.clientY - r.top;
+    });
+    canvas.addEventListener('mousedown', e => { if (e.button === 0) this.mouse.clickDown = true; });
+    canvas.addEventListener('mouseup', e => { if (e.button === 0) this.mouse.clickDown = false; });
+  }
+
+  static isMoving() {
+    return this.keys['w'] || this.keys['ArrowUp'] || this.keys['s'] || this.keys['ArrowDown'] || 
+           this.keys['a'] || this.keys['ArrowLeft'] || this.keys['d'] || this.keys['ArrowRight'];
+  }
+  static consumeKey(key) { if(this.keys[key]) { this.keys[key] = false; return true; } return false; }
+  static consumeClick() { if(this.mouse.clickDown) { this.mouse.clickDown = false; return true; } return false; }
+}
+
+class ObjectPool {
+  constructor(factoryFn, initialSize) {
+    this.factoryFn = factoryFn;
+    this.pool = Array.from({length: initialSize}, () => factoryFn());
+  }
+  get() {
+    let obj = this.pool.find(o => !o.active);
+    if (!obj) {
+      obj = this.factoryFn();
+      this.pool.push(obj);
+    }
+    obj.active = true;
+    return obj;
+  }
+  getActive() { return this.pool.filter(o => o.active); }
+  releaseAll() { this.pool.forEach(o => o.active = false); }
+}
+
+class SpatialHash {
+  constructor(cellSize) {
+    this.cellSize = cellSize;
+    this.cells = new Map();
+  }
+  clear() { this.cells.clear(); }
+  _hash(x, y) { return `${Math.floor(x / this.cellSize)},${Math.floor(y / this.cellSize)}`; }
+  
+  insert(entity) {
+    const key = this._hash(entity.x, entity.y);
+    if (!this.cells.has(key)) this.cells.set(key, []);
+    this.cells.get(key).push(entity);
+  }
+  
+  getNearby(x, y, radius) {
+    const minC = Math.floor((x - radius) / this.cellSize);
+    const maxC = Math.floor((x + radius) / this.cellSize);
+    const minR = Math.floor((y - radius) / this.cellSize);
+    const maxR = Math.floor((y + radius) / this.cellSize);
+    
+    let result = [];
+    for (let c = minC; c <= maxC; c++) {
+      for (let r = minR; r <= maxR; r++) {
+        const key = `${c},${r}`;
+        if (this.cells.has(key)) result.push(...this.cells.get(key));
+      }
+    }
+    return result;
+  }
+}
+
+class Renderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d', { alpha: false }); // Optimize main canvas
+    
+    this.lightCanvas = document.createElement('canvas');
+    this.lightCanvas.width = CONSTANTS.VIEW_W;
+    this.lightCanvas.height = CONSTANTS.VIEW_H;
+    this.lightCtx = this.lightCanvas.getContext('2d');
+    
+    // Set smoothing properties once
+    this.ctx.imageSmoothingEnabled = false;
+    this.lightCtx.imageSmoothingEnabled = false;
+    
+    this.offscreenCanvas = document.createElement('canvas');
+    this.offscreenCtx = this.offscreenCanvas.getContext('2d', { alpha: false });
+    this.offscreenCtx.imageSmoothingEnabled = false;
+    
+    // Pre-rendered light brushes (Huge performance boost over per-frame gradients)
+    this.ambientBrush = this._createLightBrush(160, 'radial');
+    this.beamBrush = this._createLightBrush(550, 'beam');
+    this.anglerBrush = this._createLightBrush(150, 'angler');
+
+    this.hud = {
+      container: document.getElementById('dom-hud'),
+      o2Fill: document.getElementById('hud-o2-fill'),
+      hpFill: document.getElementById('hud-hp-fill'),
+      stats: document.getElementById('hud-relics-mines'),
+      depth: document.getElementById('hud-depth'),
+      extractMsg: document.getElementById('hud-extract-msg'),
+      lastHp: -1, lastO2: -1, lastRelics: -1, lastMines: -1, lastDepth: -1, lastExtract: null
+    };
+  }
+
+  _createLightBrush(radius, type) {
+    const c = document.createElement('canvas');
+    c.width = radius * 2; c.height = radius * 2;
+    const ctx = c.getContext('2d');
+    
+    if (type === 'radial') {
+      let grad = ctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
+      grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(radius, radius, radius, 0, Math.PI*2); ctx.fill();
+    } else if (type === 'beam') {
+      let grad = ctx.createRadialGradient(radius, radius, 20, radius, radius, radius);
+      grad.addColorStop(0, 'rgba(255,255,255,0.9)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.moveTo(radius, radius);
+      ctx.arc(radius, radius, radius, -0.6, 0.6); ctx.lineTo(radius, radius); ctx.fill();
+    } else if (type === 'angler') {
+      let grad = ctx.createRadialGradient(radius, radius, 5, radius, radius, radius);
+      grad.addColorStop(0, 'rgba(200, 255, 50, 0.9)'); grad.addColorStop(1, 'rgba(200, 255, 50, 0)');
+      ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(radius, radius, radius, 0, Math.PI*2); ctx.fill();
+    }
+    return c;
+  }
+
+  preRenderEnvironment(region, mapGrid) {
+    const w = region.cols * CONSTANTS.TILE_SIZE;
+    const h = region.rows * CONSTANTS.TILE_SIZE;
+    this.offscreenCanvas.width = w;
+    this.offscreenCanvas.height = h;
+    
+    // Draw Background Gradient
+    let grad = this.offscreenCtx.createLinearGradient(0, 0, w, h);
+    grad.addColorStop(0, region.colorTop); grad.addColorStop(1, region.colorBot);
+    this.offscreenCtx.fillStyle = grad; 
+    this.offscreenCtx.fillRect(0, 0, w, h);
+
+    // Draw Static Tiles
+    for (let r = 0; r < region.rows; r++) {
+      for (let c = 0; c < region.cols; c++) {
+        let tile = mapGrid[r][c], tx = c * CONSTANTS.TILE_SIZE, ty = r * CONSTANTS.TILE_SIZE;
+        if (tile >= 11 && tile <= 14) {
+          this.offscreenCtx.fillStyle = region.rockColor; 
+          this.offscreenCtx.fillRect(tx, ty, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+          AssetManager.draw(this.offscreenCtx, `rock_${tile - 10}`, tx, ty, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+        }
+        else if (tile >= 21 && tile <= 24) {
+          this.offscreenCtx.fillStyle = region.coralColor; 
+          this.offscreenCtx.fillRect(tx, ty, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+          AssetManager.draw(this.offscreenCtx, `coral_${tile - 20}`, tx, ty, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+        }
+        else if (tile === 31) {
+          AssetManager.draw(this.offscreenCtx, 'wreck', tx, ty, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE, (ct,x,y,w,h) => {
+            ct.fillStyle = '#4e342e'; ct.fillRect(x, y, w, h);
+            ct.strokeStyle = '#3e2723'; ct.strokeRect(x, y, w, h);
+            ct.beginPath(); ct.moveTo(x, y + 10); ct.lineTo(x + w, y + 10);
+            ct.moveTo(x, y + 30); ct.lineTo(x + w, y + 30); ct.stroke();
+          });
+        }
+      }
     }
   }
 
-  ctx.restore();
-}
-
-/* -------------------------------------------------------------
- *  7. CONTROLS & FLOW
- * ------------------------------------------------------------- */
-window.addEventListener('keydown', e => {
-  keys[e.key] = true;
-  if (e.code === 'Space' && diver && diver.charges > 0 && !isPaused) {
-    diver.charges--; depthCharges.push({ x: diver.x, y: diver.y, vy: 2, timer: 120 });
+  // Dirty updates to DOM avoiding layout thrashing
+  updateDOMHUD(diver, regionState, depthMeters, extractMsg) {
+    if (this.hud.lastO2 !== diver.o2) {
+      this.hud.o2Fill.style.width = `${Math.max(0, (diver.o2 / diver.maxO2) * 100)}%`;
+      this.hud.o2Fill.style.backgroundColor = diver.o2 < 25 ? '#ff1744' : '#00e5ff';
+      this.hud.lastO2 = diver.o2;
+    }
+    if (this.hud.lastHp !== diver.hp) {
+      this.hud.hpFill.style.width = `${Math.max(0, (diver.hp / diver.maxHp) * 100)}%`;
+      this.hud.lastHp = diver.hp;
+    }
+    if (this.hud.lastRelics !== regionState.relics || this.hud.lastMines !== diver.charges) {
+      this.hud.stats.innerText = `RELICS: ${regionState.relics}/6 | MINES: ${diver.charges}/${diver.maxCharges}`;
+      this.hud.lastRelics = regionState.relics; this.hud.lastMines = diver.charges;
+    }
+    if (this.hud.lastDepth !== depthMeters) {
+      this.hud.depth.innerText = `DEPTH: ${depthMeters}m`;
+      this.hud.lastDepth = depthMeters;
+    }
+    if (this.hud.lastExtract !== extractMsg) {
+      if(extractMsg) {
+        this.hud.extractMsg.style.display = 'block';
+        this.hud.extractMsg.innerText = extractMsg.text;
+        this.hud.extractMsg.style.color = extractMsg.color;
+      } else {
+        this.hud.extractMsg.style.display = 'none';
+      }
+      this.hud.lastExtract = extractMsg;
+    }
   }
-  if (e.code === 'Escape' && diver) {
-    isPaused = !isPaused; document.getElementById('pauseOverlay').classList.toggle('hidden', !isPaused);
+
+  renderGame(engine) {
+    const { diver, camera, activeRegion, mapGrid, entities, screenShake, hasDescended } = engine;
+    
+    this.ctx.save();
+    if (screenShake > 0) this.ctx.translate((Math.random()-0.5)*screenShake, (Math.random()-0.5)*screenShake);
+
+    // 1. Draw pre-rendered environment slice
+    this.ctx.drawImage(
+      this.offscreenCanvas, 
+      camera.x, camera.y, CONSTANTS.VIEW_W, CONSTANTS.VIEW_H,
+      0, 0, CONSTANTS.VIEW_W, CONSTANTS.VIEW_H
+    );
+
+    this.ctx.save();
+    this.ctx.translate(-camera.x, -camera.y);
+
+    // 2. Draw Ship
+    let shipX = (activeRegion.cols * CONSTANTS.TILE_SIZE) / 2 - 150;
+    AssetManager.draw(this.ctx, 'ship', shipX + 150, 20, 378, 52, (ct) => {
+      ct.fillStyle = '#455a64'; ct.beginPath(); ct.moveTo(shipX, 20); ct.lineTo(shipX + 300, 20);
+      ct.lineTo(shipX + 260, 140); ct.lineTo(shipX + 40, 140); ct.fill();
+      ct.fillStyle = '#ffb300'; ct.fillRect(shipX + 120, -20, 60, 40);
+    });
+
+    // 3. Draw Static Entities (Pickups, Mines)
+    entities.o2Stations.forEach(st => { if (!st.consumed) AssetManager.draw(this.ctx, 'o2', st.x, st.y, 18, 36, ct => { ct.fillStyle = '#00e5ff'; ct.beginPath(); ct.arc(st.x, st.y, 8, 0, Math.PI*2); ct.fill(); }); });
+    entities.ammoDrops.forEach(am => { if (!am.consumed) AssetManager.draw(this.ctx, 'ammo', am.x, am.y, 24, 24, ct => { ct.fillStyle = '#e53935'; ct.fillRect(am.x-8, am.y-8, 16, 16); }); });
+    entities.relics.forEach(r => { if (!r.collected) AssetManager.draw(this.ctx, r.imageId, r.x, r.y, 20, 20, ct => { ct.fillStyle = '#ffd700'; ct.beginPath(); ct.arc(r.x, r.y, 10, 0, Math.PI*2); ct.fill(); }); });
+    entities.treasures.forEach(t => { if (!t.consumed) AssetManager.draw(this.ctx, t.imageId, t.x, t.y, 24, 24, ct => { ct.fillStyle = '#ffca28'; ct.fillRect(t.x-6, t.y-6, 12, 12); }); });
+    
+    entities.seaMines.forEach(m => AssetManager.draw(this.ctx, 'sea_mine', m.x, m.y, 32, 32, ct => { 
+      ct.fillStyle = '#ff1744'; ct.beginPath(); ct.arc(m.x, m.y, m.size, 0, Math.PI*2); ct.fill(); 
+      ct.fillStyle = '#212121'; ct.fillRect(m.x-3, m.y-3, 6, 6);
+    }));
+
+    // 4. Draw Dynamic Entities (Enemies, Charges, Particles, Floaters, Projectiles)
+    entities.depthCharges.forEach(dc => { 
+      AssetManager.draw(this.ctx, 'charge', dc.x, dc.y, 20, 28, ct => { ct.fillStyle = '#e53935'; ct.beginPath(); ct.arc(dc.x, dc.y, 8, 0, Math.PI*2); ct.fill(); });
+      if (Math.floor(dc.timer / 8) % 2 === 0) { this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; this.ctx.beginPath(); this.ctx.arc(dc.x, dc.y, 4, 0, Math.PI*2); this.ctx.fill(); }
+    });
+
+    entities.enemies.forEach(en => {
+      this.ctx.save(); this.ctx.translate(en.x, en.y);
+      if (en.facing === 1) this.ctx.scale(-1, 1);
+      let def = ENTITY_DEFS[en.type];
+      let spriteId = en.type === 'angler' ? (en.engaged ? 'angler_lit' : 'angler_unlit') : en.type;
+      
+      AssetManager.draw(this.ctx, spriteId, 0, 0, def.w, def.h, ct => {
+        ct.fillStyle = en.type === 'shark' ? '#78909c' : '#8e24aa';
+        ct.beginPath(); en.type === 'shark' ? ct.ellipse(0,0,def.w/2,def.h/2,0,0,Math.PI*2) : ct.arc(0,0,def.h/2,0,Math.PI*2); ct.fill();
+      });
+      this.ctx.restore();
+    });
+
+    this.ctx.strokeStyle = '#c0c0c0'; this.ctx.lineWidth = 3;
+    entities.projectiles.forEach(p => { this.ctx.beginPath(); this.ctx.moveTo(p.x, p.y); this.ctx.lineTo(p.x-(p.vx*3), p.y-(p.vy*3)); this.ctx.stroke(); });
+    
+    entities.particles.forEach(pt => { this.ctx.fillStyle = pt.type==='blast'?'#ff9800':(pt.type==='blood'?'#d32f2f':'#8d6e63'); this.ctx.fillRect(pt.x, pt.y, 4, 4); });
+    entities.floaters.forEach(fl => { this.ctx.fillStyle = fl.color; this.ctx.font = 'bold 12px sans-serif'; this.ctx.fillText(fl.text, fl.x, fl.y); });
+
+    // 5. Draw Diver
+    if (diver.invuln % 6 < 3) {
+      this.ctx.save(); this.ctx.translate(diver.x, diver.y);
+      let dx = InputManager.mouse.worldX - diver.x;
+      let dy = InputManager.mouse.worldY - diver.y;
+      if (dx < 0) this.ctx.scale(-1, 1);
+      
+      let prefix = 'diver';
+      if (engine.activeSuit === 'suit_pink') prefix = 'diver_pink';
+      if (engine.activeSuit === 'suit_blue') prefix = 'diver_blue';
+      
+      let dSprite = `${prefix}_still`;
+      if (InputManager.isMoving()) dSprite = `${prefix}_swim`;
+      else if (Math.abs(dx) > 30 || Math.abs(dy) > 30) dSprite = dy < 0 ? `${prefix}_aim_up` : `${prefix}_aim_fwd`;
+
+      AssetManager.draw(this.ctx, dSprite, 0, 0, 48, 56, ct => {
+        ct.fillStyle = engine.activeSuit === 'suit_pink' ? '#e91e63' : (engine.activeSuit === 'suit_blue' ? '#1e88e5' : '#ffab00');
+        ct.fillRect(-12, -16, 24, 32); ct.fillStyle = '#ffd54f'; ct.beginPath(); ct.arc(0, -16, 12, 0, Math.PI*2); ct.fill(); 
+      });
+      this.ctx.restore();
+    }
+
+    // 6. Draw Extraction Arrow if active
+    let extractMsg = null;
+    if (hasDescended && diver.y < 100) {
+      if (diver.x >= shipX && diver.x <= shipX + 300) {
+        extractMsg = { text: "RETURN TO SHIP TO EXTRACT", color: "#38ef7d" };
+      } else {
+        extractMsg = { text: "SWIM TO THE SHIP HULL TO EXTRACT", color: "#ffca28" };
+        let dist = (shipX + 150) - diver.x; 
+        let ratio = Math.min(1, Math.abs(dist) / 1500); 
+        this.ctx.fillStyle = `rgb(255, ${Math.floor(215 * (1 - ratio))}, 0)`;
+        this.ctx.beginPath();
+        let ax = diver.x + (dist > 0 ? 50 : -50), ay = diver.y - 40;
+        if (dist > 0) {
+          this.ctx.moveTo(ax-10, ay-5); this.ctx.lineTo(ax+5, ay-5); this.ctx.lineTo(ax+5, ay-10); this.ctx.lineTo(ax+15, ay); this.ctx.lineTo(ax+5, ay+10); this.ctx.lineTo(ax+5, ay+5); this.ctx.lineTo(ax-10, ay+5);
+        } else {
+          this.ctx.moveTo(ax+10, ay-5); this.ctx.lineTo(ax-5, ay-5); this.ctx.lineTo(ax-5, ay-10); this.ctx.lineTo(ax-15, ay); this.ctx.lineTo(ax-5, ay+10); this.ctx.lineTo(ax-5, ay+5); this.ctx.lineTo(ax+10, ay+5);
+        }
+        this.ctx.fill();
+      }
+    }
+    this.ctx.restore(); 
+
+    // 7. Optimal Pre-rendered Lighting
+    let depthRatio = Math.max(0, (diver.y - 600) / (activeRegion.rows * CONSTANTS.TILE_SIZE - 600));
+    let darkness = Math.min(0.96, depthRatio * activeRegion.darknessFactor);
+    
+    if (darkness > 0) {
+      this.lightCtx.clearRect(0, 0, CONSTANTS.VIEW_W, CONSTANTS.VIEW_H);
+      this.lightCtx.fillStyle = `rgba(0, 0, 7, ${darkness})`; 
+      this.lightCtx.fillRect(0, 0, CONSTANTS.VIEW_W, CONSTANTS.VIEW_H);
+      
+      let upgrades = engine.gameState.purchasedUpgrades;
+      if (upgrades.includes('flashlight') || upgrades.includes('flashlight_2')) {
+        this.lightCtx.globalCompositeOperation = 'destination-out';
+        let sx = diver.x - camera.x, sy = diver.y - camera.y;
+        
+        let hasLight2 = upgrades.includes('flashlight_2');
+        let ambRad = hasLight2 ? 160 : 120;
+        let bRad = hasLight2 ? 550 : 400;
+
+        // Draw pre-rendered brushes instead of calculating gradients
+        this.lightCtx.drawImage(this.ambientBrush, sx - 160, sy - 160, 320, 320);
+        
+        this.lightCtx.save();
+        this.lightCtx.translate(sx, sy);
+        this.lightCtx.rotate(diver.angle);
+        this.lightCtx.drawImage(this.beamBrush, -bRad, -bRad, bRad*2, bRad*2);
+        this.lightCtx.restore();
+        
+        entities.enemies.forEach(en => {
+          if (en.type === 'angler' && en.engaged) {
+            let ex = en.x - camera.x, ey = en.y - camera.y;
+            this.lightCtx.drawImage(this.anglerBrush, ex - 150, ey - 150, 300, 300);
+          }
+        });
+        this.lightCtx.globalCompositeOperation = 'source-over'; 
+      }
+      this.ctx.drawImage(this.lightCanvas, 0, 0);
+    }
+    this.ctx.restore();
+
+    this.updateDOMHUD(diver, {relics: (engine.gameState.relicsFound[activeRegion.id]?.length || 0) + engine.relicsThisDive}, Math.floor((diver.y-120)/10), extractMsg);
   }
-});
-window.addEventListener('keyup', e => keys[e.key] = false);
-canvas.addEventListener('mousemove', e => {
-  const r = canvas.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
-});
-canvas.addEventListener('mousedown', e => {
-  if (e.button === 0 && diver && !isPaused) {
-    let angles = gameState.purchasedUpgrades.includes('pneumatic_spear') ? [diver.angle-0.15, diver.angle, diver.angle+0.15] : [diver.angle];
-    angles.forEach(ang => projectiles.push({ x: diver.x, y: diver.y, vx: Math.cos(ang)*12, vy: Math.sin(ang)*12, life: 40 }));
+}
+
+class GameEngine {
+  constructor() {
+    this.renderer = new Renderer(document.getElementById('gameCanvas'));
+    this.gameState = SaveManager.load();
+    this.preDiveState = null;
+    
+    // Core state
+    this.activeRegion = null;
+    this.mapGrid = [];
+    this.camera = { x: 0, y: 0 };
+    this.diver = null;
+    this.isPaused = false;
+    this.isRunning = false;
+    this.lastTime = 0;
+    this.screenShake = 0;
+    this.hasDescended = false;
+    this.relicsThisDive = 0;
+    this.relicsThisDiveArr = [];
+    this.goldThisDive = 0;
+    this.activeSuit = this.gameState.activeSuit;
+
+    // Pools & Entities
+    this.spatialHash = new SpatialHash(100);
+    this.pools = {
+      particles: new ObjectPool(() => ({ active: false, x: 0, y: 0, vx: 0, vy: 0, life: 0, type: '' }), 200),
+      projectiles: new ObjectPool(() => ({ active: false, x: 0, y: 0, vx: 0, vy: 0, life: 0 }), 50),
+      floaters: new ObjectPool(() => ({ active: false, x: 0, y: 0, text: '', color: '', life: 0 }), 30)
+    };
+    this.entities = { enemies: [], relics: [], treasures: [], o2Stations: [], ammoDrops: [], seaMines: [], depthCharges: [], particles: [], projectiles: [], floaters: [] };
   }
-});
 
-function gameLoop() {
-  if (diver && !isPaused) { update(); render(); }
-  requestAnimationFrame(gameLoop);
+  startLevel(region) {
+    const regionMusic = {
+      'caribbean': 'Coconut_Coast_Jump', 'mediterranean': 'Steps_Above_The_Sea',
+      'indian': 'Tides_of_the_Red_Isle', 'atlantic': 'Cannonade_at_High_Tide', 'pacific': 'Tidal_Blade_Duel'
+    };
+    AudioManager.playMusic(regionMusic[region.id]);
+
+    this.preDiveState = JSON.parse(JSON.stringify(this.gameState)); // Backup
+    this.activeRegion = region;
+    this.activeSuit = this.gameState.activeSuit;
+    this.hasDescended = false;
+    this.relicsThisDive = 0;
+    this.relicsThisDiveArr = [];
+    this.goldThisDive = 0;
+    this.screenShake = 0;
+    
+    this.spatialHash.clear();
+    Object.values(this.pools).forEach(p => p.releaseAll());
+    this.entities = { enemies: [], relics: [], treasures: [], o2Stations: [], ammoDrops: [], seaMines: [], depthCharges: [], particles: [], projectiles: [], floaters: [] };
+
+    const upgrades = this.gameState.purchasedUpgrades;
+    let maxC = 3;
+    if (upgrades.includes('charge_capacity_1')) maxC += 3;
+    if (upgrades.includes('charge_capacity_2')) maxC += 3;
+
+    this.diver = {
+      x: (region.cols * CONSTANTS.TILE_SIZE) / 2, y: 120, vx: 0, vy: 0, w: 24, h: 36,
+      maxHp: upgrades.includes('wetsuit_armor') ? 200 : 100, hp: upgrades.includes('wetsuit_armor') ? 200 : 100,
+      maxO2: upgrades.includes('tank_upgrade') ? 150 : 100, o2: upgrades.includes('tank_upgrade') ? 150 : 100,
+      maxCharges: maxC, charges: maxC, angle: Math.PI / 2, invuln: 0
+    };
+
+    this.generateMap(region);
+    this.renderer.preRenderEnvironment(region, this.mapGrid);
+    
+    document.getElementById('hubOverlay').classList.add('hidden');
+    document.getElementById('dom-hud').classList.remove('hidden');
+    document.getElementById('hud-depth').classList.remove('hidden');
+    
+    this.isRunning = true;
+    this.isPaused = false;
+    this.lastTime = performance.now();
+    requestAnimationFrame((t) => this.loop(t));
+  }
+
+  generateMap(region) {
+    this.mapGrid = [];
+    // 1. Terrain
+    for (let r = 0; r < region.rows; r++) {
+      this.mapGrid[r] = [];
+      for (let c = 0; c < region.cols; c++) {
+        if (c === 0 || c === region.cols - 1 || r === region.rows - 1) {
+          this.mapGrid[r][c] = 10 + Math.floor(Math.random() * 4) + 1; 
+        } else if (r < 4) {
+          this.mapGrid[r][c] = 0; 
+        } else {
+          let scaleX = region.style === 'horizontal' ? 0.15 : 0.08;
+          let scaleY = region.style === 'horizontal' ? 0.08 : 0.15;
+          let n = Math.sin(c * scaleX) * Math.cos(r * scaleY) * 2.5 + Math.sin(c * 0.04) * 1.5 + Math.cos(r * 0.05) * 1.5 + Math.sin(c * 0.3 + r * 0.3) * 0.5;
+          n += (Math.random() * 0.4 - 0.2);
+          this.mapGrid[r][c] = n > 1.2 ? (Math.random() < 0.25 ? 20 : 10) + Math.floor(Math.random() * 4) + 1 : 0;
+        }
+      }
+    }
+    // 2. Tunnels
+    let pC = Math.floor(region.cols / 2);
+    for (let r = 2; r < region.rows - 2; r++) {
+      pC += region.style === 'horizontal' ? (Math.random() > 0.3 ? 1 : -1) * Math.floor(Math.random() * 3) : Math.floor(Math.random() * 3) - 1;
+      pC = Math.max(3, Math.min(region.cols - 4, pC));
+      for (let dc = -3; dc <= 3; dc++) if (this.mapGrid[r][pC + dc]) this.mapGrid[r][pC + dc] = Math.random() < 0.15 ? 20 + Math.floor(Math.random() * 4) + 1 : 0;
+    }
+    
+    // 3. Wrecks & Objects
+    let wrecksToPlace = (region.diff === 'Medium' || region.diff === 'Hard') ? (Math.random() > 0.5 ? 2 : 1) : 0;
+    let placedWrecks = 0, placedRelics = 0, placedWreckRelics = 0;
+    const relicTypes = ['relic_1', 'relic_2', 'relic_3'];
+    const savedRelics = this.gameState.relicsFound[region.id] || [];
+
+    // Helper to dynamically carve a destructible path to the surface/center
+    const carveToSurface = (startX, startY) => {
+      let cx = startX, cy = startY;
+      let targetX = Math.floor(region.cols / 2); // Ship is near center
+      let styleRand = Math.random(); // 0-0.33 Vertical, 0.33-0.66 Lateral, 0.66-1.0 Balanced
+      
+      // Make a safe 5x5 pocket around the spawn point
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          let px = cx + dx, py = cy + dy;
+          if (py >= 0 && py < region.rows && px >= 0 && px < region.cols) {
+            if (this.mapGrid[py][px] >= 11 && this.mapGrid[py][px] <= 14) this.mapGrid[py][px] = 20 + Math.floor(Math.random() * 4) + 1;
+          }
+        }
+      }
+
+      while (cy > 4) {
+        // Clear a 3x3 destructible vein to prevent diagonal pinches
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            let px = cx + dx, py = cy + dy;
+            if (px >= 0 && px < region.cols && py >= 0 && py < region.rows) {
+              if (this.mapGrid[py][px] >= 11 && this.mapGrid[py][px] <= 14) this.mapGrid[py][px] = 20 + Math.floor(Math.random() * 4) + 1;
+            }
+          }
+        }
+        
+        // Safety check: if we've reached a high enough open water area, we can stop
+        if (cy <= 10 && this.mapGrid[cy][cx] === 0) break;
+
+        if (cx === targetX) {
+          cy--; // Move straight up if already centered
+        } else {
+          // Determine next direction based on the randomized style
+          if (styleRand < 0.33) { // Vertical bias
+            if (Math.random() < 0.8) cy--; else cx += (targetX > cx ? 1 : -1);
+          } else if (styleRand < 0.66) { // Lateral bias
+            if (Math.random() < 0.2) cy--; else cx += (targetX > cx ? 1 : -1);
+          } else { // Balanced
+            if (Math.random() < 0.5) cy--; else cx += (targetX > cx ? 1 : -1);
+          }
+        }
+      }
+    };
+
+    while(placedWrecks < wrecksToPlace) {
+      let wx = Math.floor(Math.random() * (region.cols - 16)) + 2;
+      let wy = region.rows - 8 - (placedWrecks * 10); 
+      for(let r = 0; r < 6; r++) {
+        for(let c = 0; c < 12; c++) {
+          let gY = Math.min(wy + r, region.rows - 2), gX = wx + c;
+          if(r === 0 || r === 5 || c === 0 || c === 11) {
+            this.mapGrid[gY][gX] = ((r === 0 && (c === 5 || c === 6)) || (c === 0 && r >= 3) || (c === 11 && r >= 3)) ? 20 + Math.floor(Math.random() * 4) + 1 : 31;
+          } else this.mapGrid[gY][gX] = 0;
+        }
+      }
+      if (placedWreckRelics < 2 && placedRelics < 6) {
+        this.entities.relics.push({ id: placedRelics, imageId: relicTypes[Math.floor(Math.random()*relicTypes.length)], x: (wx + 6)*CONSTANTS.TILE_SIZE + 20, y: (wy + 4)*CONSTANTS.TILE_SIZE + 20, collected: savedRelics.includes(placedRelics) });
+        placedRelics++; placedWreckRelics++;
+      }
+      
+      carveToSurface(wx + 6, wy - 1);
+      
+      placedWrecks++;
+    }
+
+    while (placedRelics < 6) {
+      const rC = Math.floor(Math.random() * (region.cols - 10)) + 5, rR = Math.floor(Math.random() * (region.rows - 12)) + 8;
+      if (this.mapGrid[rR][rC] !== 0 && this.mapGrid[rR][rC] !== 31) {
+        this.mapGrid[rR][rC] = 0; 
+        this.entities.relics.push({ id: placedRelics, imageId: relicTypes[Math.floor(Math.random() * 3)], x: rC * CONSTANTS.TILE_SIZE + 20, y: rR * CONSTANTS.TILE_SIZE + 20, collected: savedRelics.includes(placedRelics) });
+        
+        carveToSurface(rC, rR - 1);
+        
+        placedRelics++;
+      }
+    }
+
+    // 4. Loot & Stations
+    for (let i = 0; i < region.cols; i++) {
+      const cC = Math.floor(Math.random() * (region.cols - 4)) + 2, cR = Math.floor(Math.random() * (region.rows - 8)) + 6;
+      if (this.mapGrid[cR][cC] === 0) {
+        let rand = Math.random();
+        if (rand < 0.7) this.entities.treasures.push({ imageId: 'treasure', x: cC * CONSTANTS.TILE_SIZE + 20, y: cR * CONSTANTS.TILE_SIZE + 20, value: 20 + Math.floor(Math.random()*30), consumed: false });
+        else if (rand < 0.85) this.entities.o2Stations.push({ x: cC * CONSTANTS.TILE_SIZE + 20, y: cR * CONSTANTS.TILE_SIZE + 20, consumed: false });
+        else this.entities.ammoDrops.push({ x: cC * CONSTANTS.TILE_SIZE + 20, y: cR * CONSTANTS.TILE_SIZE + 20, consumed: false });
+      }
+    }
+
+    for (let i = 0; i < region.cols * 1.5; i++) {
+      const mC = Math.floor(Math.random() * (region.cols - 4)) + 2, mR = Math.floor(Math.random() * (region.rows - 10)) + 8;
+      if (this.mapGrid[mR][mC] === 0 && (this.mapGrid[mR-1][mC] >= 11 || this.mapGrid[mR+1][mC] >= 11 || this.mapGrid[mR][mC-1] >= 11 || this.mapGrid[mR][mC+1] >= 11)) {
+        this.entities.seaMines.push({ id: `sm_${i}`, x: mC * CONSTANTS.TILE_SIZE + 20, y: mR * CONSTANTS.TILE_SIZE + 20, size: 16 });
+      }
+    }
+
+    // 5. Enemies
+    let spawnPool = region.diff === 'Easy' ? ['squid', 'eel'] : (region.diff === 'Medium' ? ['squid', 'eel', 'shark', 'angler'] : ['shark', 'angler', 'ghost', 'skeleton']);
+    let spawned = 0, attempts = 0;
+    while(spawned < region.enemyCount && attempts < 1000) {
+      const eC = Math.floor(Math.random() * (region.cols - 4)) + 2, eR = Math.floor(Math.random() * (region.rows - 8)) + 6;
+      if (this.mapGrid[eR][eC] === 0) {
+        let type = spawnPool[Math.floor(Math.random() * spawnPool.length)];
+        let def = ENTITY_DEFS[type];
+        this.entities.enemies.push({ id: `en_${spawned}`, type, x: eC * CONSTANTS.TILE_SIZE + 20, y: eR * CONSTANTS.TILE_SIZE + 20, vx: 0, vy: 0, hp: def.hp, facing: Math.random() > 0.5 ? 1 : -1, searchTimer: 0, engaged: false });
+        spawned++;
+      }
+      attempts++;
+    }
+  }
+
+  isSolid(x, y) {
+    let c = Math.floor(x / CONSTANTS.TILE_SIZE), r = Math.floor(y / CONSTANTS.TILE_SIZE);
+    if (c < 0 || c >= this.activeRegion.cols || r < 0 || r >= this.activeRegion.rows) return true;
+    return this.mapGrid[r][c] >= 11;
+  }
+
+  spawnParticle(x, y, type, count) {
+    for (let i = 0; i < count; i++) {
+      let p = this.pools.particles.get();
+      p.x = x; p.y = y; p.vx = (Math.random()-0.5)*5; p.vy = (Math.random()-0.5)*5; p.life = 30 + Math.random()*20; p.type = type;
+    }
+  }
+  spawnText(x, y, text, color) {
+    let f = this.pools.floaters.get();
+    f.x = x; f.y = y; f.text = text; f.color = color; f.life = 60;
+  }
+
+  detonateCharge(x, y) {
+    this.screenShake = 18;
+    const rad = 100;
+    let minC = Math.max(0, Math.floor((x - rad)/CONSTANTS.TILE_SIZE)), maxC = Math.min(this.activeRegion.cols-1, Math.floor((x + rad)/CONSTANTS.TILE_SIZE));
+    let minR = Math.max(0, Math.floor((y - rad)/CONSTANTS.TILE_SIZE)), maxR = Math.min(this.activeRegion.rows-1, Math.floor((y + rad)/CONSTANTS.TILE_SIZE));
+    
+    // Modify mapGrid strictly within radius
+    let gridChanged = false;
+    for (let r = minR; r <= maxR; r++) {
+      for (let c = minC; c <= maxC; c++) {
+        if (Math.hypot(x - (c*CONSTANTS.TILE_SIZE+20), y - (r*CONSTANTS.TILE_SIZE+20)) < rad) {
+          if (this.mapGrid[r][c] >= 21 && this.mapGrid[r][c] <= 24) { 
+            this.mapGrid[r][c] = 0; this.spawnParticle(c*CONSTANTS.TILE_SIZE+20, r*CONSTANTS.TILE_SIZE+20, 'rock', 3); 
+            gridChanged = true;
+          }
+        }
+      }
+    }
+    // Re-render background if grid changed
+    if (gridChanged) this.renderer.preRenderEnvironment(this.activeRegion, this.mapGrid);
+    
+    if (Math.hypot(x - this.diver.x, y - this.diver.y) < rad && this.diver.invuln <= 0) { 
+      this.diver.hp -= 40; this.diver.invuln = 20; 
+      AudioManager.playSFX('diver-hurt', true);
+    }
+    
+    // Damage via Spatial Grid
+    let nearby = this.spatialHash.getNearby(x, y, rad);
+    nearby.forEach(ent => {
+      if (Math.hypot(x - ent.x, y - ent.y) < rad) {
+        if (ent.id.startsWith('en_')) {
+          ent.hp -= 5;
+          if (ent.hp <= 0) this.spawnParticle(ent.x, ent.y, 'blood', 15);
+        } else if (ent.id.startsWith('sm_')) {
+          ent.hp = 0; // Trigger mine for cascade chain-reaction
+        }
+      }
+    });
+
+    this.spawnParticle(x, y, 'blast', 20);
+  }
+
+  loop(timestamp) {
+    if (!this.isRunning) return;
+    const dtMs = timestamp - this.lastTime;
+    this.lastTime = timestamp;
+    
+    if (!this.isPaused) {
+      // Cap dt to avoid massive spikes if tab is backgrounded
+      const dtRatio = Math.min(dtMs / CONSTANTS.FRAME_MS, 3.0); 
+      this.update(dtRatio);
+    }
+    
+    this.renderer.renderGame(this);
+    requestAnimationFrame((t) => this.loop(t));
+  }
+
+  update(dt) {
+    // Input Handling
+    if (InputManager.consumeKey('Escape')) {
+      AudioManager.playSFX('menu-select');
+      this.isPaused = true; 
+      AudioManager.setMusicVolume(0.1);
+      document.getElementById('pauseOverlay').classList.remove('hidden');
+    }
+    if (InputManager.consumeKey(' ') && this.diver.charges > 0) {
+      this.diver.charges--; 
+      AudioManager.playSFX('armed-charge');
+      this.entities.depthCharges.push({ x: this.diver.x, y: this.diver.y, vy: 2, timer: 120 });
+    }
+    if (InputManager.consumeClick() && this.diver.invuln <= 0) {
+      AudioManager.playSFX('shoot');
+      let angles = this.gameState.purchasedUpgrades.includes('pneumatic_spear') ? [this.diver.angle-0.15, this.diver.angle, this.diver.angle+0.15] : [this.diver.angle];
+      angles.forEach(ang => {
+        let p = this.pools.projectiles.get();
+        p.x = this.diver.x; p.y = this.diver.y; p.vx = Math.cos(ang)*12; p.vy = Math.sin(ang)*12; p.life = 40;
+      });
+    }
+
+    if (this.screenShake > 0) this.screenShake *= 0.85;
+    if (this.diver.y > 300) this.hasDescended = true;
+
+    // Extraction Check
+    let shipX = (this.activeRegion.cols * CONSTANTS.TILE_SIZE) / 2 - 150;
+    if (this.hasDescended && this.diver.y < 90 && this.diver.x >= shipX && this.diver.x <= shipX + 300) { 
+      this.endDive(true); return; 
+    }
+
+    // Diver Physics (scaled by dt)
+    const accel = 0.3 * dt, drag = Math.pow(0.92, dt), gravity = 0.12 * dt;
+    if (!InputManager.isMoving()) this.diver.vy += gravity;
+    if (InputManager.keys['w'] || InputManager.keys['ArrowUp']) this.diver.vy -= accel;
+    if (InputManager.keys['s'] || InputManager.keys['ArrowDown']) this.diver.vy += accel;
+    if (InputManager.keys['a'] || InputManager.keys['ArrowLeft']) this.diver.vx -= accel;
+    if (InputManager.keys['d'] || InputManager.keys['ArrowRight']) this.diver.vx += accel;
+    
+    this.diver.vx *= drag; this.diver.vy *= drag;
+
+    let moveX = this.diver.vx * dt;
+    let moveY = this.diver.vy * dt;
+
+    if (!this.isSolid(this.diver.x + moveX, this.diver.y)) this.diver.x += moveX; else this.diver.vx = 0;
+    if (!this.isSolid(this.diver.x, this.diver.y + moveY)) this.diver.y += moveY; else this.diver.vy = 0;
+
+    InputManager.mouse.worldX = InputManager.mouse.x + this.camera.x; 
+    InputManager.mouse.worldY = InputManager.mouse.y + this.camera.y;
+    this.diver.angle = Math.atan2(InputManager.mouse.worldY - this.diver.y, InputManager.mouse.worldX - this.diver.x);
+    
+    this.diver.o2 = Math.max(0, this.diver.o2 - (this.activeRegion.o2Rate * dt));
+    
+    if (this.diver.o2 <= 0) {
+      this.diver.hp -= (0.15 * dt);
+      AudioManager.chokeTimer += dt;
+      if (AudioManager.chokeTimer > 60) {
+        AudioManager.playSFX('diver-hurt', true);
+        AudioManager.chokeTimer = 0;
+      }
+    } else {
+      AudioManager.chokeTimer = 0;
+    }
+    
+    if (this.diver.invuln > 0) this.diver.invuln -= dt;
+
+    this.camera.x = Math.max(0, Math.min(this.diver.x - CONSTANTS.VIEW_W / 2, this.activeRegion.cols * CONSTANTS.TILE_SIZE - CONSTANTS.VIEW_W));
+    this.camera.y = Math.max(0, Math.min(this.diver.y - CONSTANTS.VIEW_H / 2, this.activeRegion.rows * CONSTANTS.TILE_SIZE - CONSTANTS.VIEW_H));
+
+    // Spatial Hashing Generation for this frame
+    this.spatialHash.clear();
+    this.entities.enemies.forEach(en => this.spatialHash.insert(en));
+    this.entities.seaMines.forEach(sm => { sm.hp = 1; this.spatialHash.insert(sm); }); // Inject dummy hp
+
+    // Interactions
+    this.entities.o2Stations.forEach(st => {
+      if (!st.consumed && Math.hypot(this.diver.x - st.x, this.diver.y - st.y) < 30) {
+        st.consumed = true; this.diver.o2 = Math.min(this.diver.maxO2, this.diver.o2 + 50);
+        AudioManager.playSFX('heal_1');
+        this.spawnText(st.x, st.y, "+OXYGEN", "#00e5ff");
+      }
+    });
+
+    this.entities.ammoDrops.forEach(ammo => {
+      if (!ammo.consumed && Math.hypot(this.diver.x - ammo.x, this.diver.y - ammo.y) < 30 && this.diver.charges < this.diver.maxCharges) {
+        ammo.consumed = true; 
+        AudioManager.playSFX('chest_open');
+        let gained = Math.min(2, this.diver.maxCharges - this.diver.charges);
+        this.diver.charges += gained;
+        this.spawnText(ammo.x, ammo.y, `+${gained} MINES`, "#e53935");
+      }
+    });
+
+    this.entities.relics.forEach(r => {
+      if (!r.collected && Math.hypot(this.diver.x - r.x, this.diver.y - r.y) < 30) {
+        r.collected = true; this.relicsThisDive++;
+        this.relicsThisDiveArr.push(r.id);
+        AudioManager.playSFX('pickup-relic');
+        this.spawnText(r.x, r.y, "RELIC FOUND!", "#ffd700"); 
+        
+        // Defensive check utilizing optional chaining and fallback
+        let previouslyFound = this.gameState.relicsFound[this.activeRegion.id]?.length || 0;
+        if (this.relicsThisDive + previouslyFound >= 6) {
+          setTimeout(() => this.endDive(true), 1500); 
+        }
+      }
+    });
+
+    this.entities.treasures.forEach(t => {
+      if (!t.consumed && Math.hypot(this.diver.x - t.x, this.diver.y - t.y) < 30) {
+        t.consumed = true; this.goldThisDive += t.value; 
+        AudioManager.playSFX('pickup-coin');
+        this.spawnText(t.x, t.y, `+${t.value}g`, "#38ef7d");
+      }
+    });
+
+    // Object Pooled Arrays
+    this.entities.particles = this.pools.particles.getActive();
+    this.entities.particles.forEach(pt => { pt.x += pt.vx*dt; pt.y += pt.vy*dt; pt.life -= dt; if (pt.life <= 0) pt.active = false; });
+    
+    this.entities.floaters = this.pools.floaters.getActive();
+    this.entities.floaters.forEach(fl => { fl.y -= 0.5*dt; fl.life -= dt; if (fl.life <= 0) fl.active = false; });
+    
+    this.entities.projectiles = this.pools.projectiles.getActive();
+    this.entities.projectiles.forEach(p => { 
+      p.x += p.vx*dt; p.y += p.vy*dt; p.life -= dt; 
+      if (this.isSolid(p.x, p.y) || p.life <= 0) { p.active = false; return; }
+      
+      let nearby = this.spatialHash.getNearby(p.x, p.y, 16);
+      for(let ent of nearby) {
+        let size = ent.size || ENTITY_DEFS[ent.type].size;
+        if (Math.hypot(p.x - ent.x, p.y - ent.y) < size) {
+          ent.hp -= 1; p.active = false;
+          if (ent.hp <= 0 && ent.id.startsWith('en_')) {
+            AudioManager.playSFX('sprite-hurt', true);
+            this.spawnParticle(ent.x, ent.y, 'blood', 10);
+          }
+          break;
+        }
+      }
+    });
+
+    // Filter dead dynamically
+    this.entities.enemies = this.entities.enemies.filter(en => en.hp > 0);
+
+    // AI & Hazards
+    this.entities.seaMines.forEach(m => {
+      let detectRange = this.gameState.purchasedUpgrades.includes('upgrade_degaussed') ? (m.size + 5) : (m.size + 34);
+      if (Math.hypot(this.diver.x - m.x, this.diver.y - m.y) < detectRange && this.diver.invuln <= 0) {
+        m.hp = 0; // Trigger mine cascade
+      }
+    });
+
+    // Cascade explosions
+    this.entities.seaMines.forEach(m => {
+      if (m.hp <= 0 && !m.detonated) {
+        m.detonated = true;
+        AudioManager.playSFX('short-explosion', true);
+        this.detonateCharge(m.x, m.y); // Creates explosion and triggers nearby mines
+      }
+    });
+    this.entities.seaMines = this.entities.seaMines.filter(sm => !sm.detonated);
+
+    this.entities.enemies.forEach(en => {
+      let def = ENTITY_DEFS[en.type];
+      let dist = Math.hypot(this.diver.x - en.x, this.diver.y - en.y);
+      let dx = this.diver.x - en.x, dy = this.diver.y - en.y;
+      
+      let inFront = (dx > 0 && en.facing === 1) || (dx < 0 && en.facing === -1);
+      let effectiveAggro = inFront ? def.aggro : def.aggro * 0.35;
+      
+      if (dist < effectiveAggro) {
+        en.engaged = true;
+        let ang = Math.atan2(dy, dx);
+        en.vx += Math.cos(ang) * def.speed * dt; 
+        en.vy += Math.sin(ang) * def.speed * dt;
+        en.facing = dx > 0 ? 1 : -1;
+      } else {
+        en.engaged = false; en.searchTimer += dt;
+        if (en.searchTimer > def.search + Math.random() * 60) {
+          en.facing *= -1; en.searchTimer = 0; en.vx = en.facing * 1.5; 
+        }
+      }
+      
+      let enDrag = Math.pow(0.95, dt);
+      en.vx *= enDrag; en.vy *= enDrag;
+      
+      let emX = en.vx * dt, emY = en.vy * dt;
+      if (!this.isSolid(en.x + emX, en.y)) en.x += emX;
+      if (!this.isSolid(en.x, en.y + emY)) en.y += emY;
+      
+      if (dist < def.size + 12 && this.diver.invuln <= 0) {
+        this.diver.hp -= 25; this.diver.invuln = 40; this.screenShake = 10; this.spawnParticle(this.diver.x, this.diver.y, 'blood', 5);
+        AudioManager.playSFX('diver-hurt', true);
+      }
+    });
+
+    for(let i = this.entities.depthCharges.length - 1; i >= 0; i--) {
+      let dc = this.entities.depthCharges[i];
+      if (!this.isSolid(dc.x, dc.y + (dc.vy * dt))) dc.y += (dc.vy * dt); 
+      dc.timer -= dt;
+      if (dc.timer <= 0) { 
+        AudioManager.playSFX('long-explosion', true);
+        this.detonateCharge(dc.x, dc.y); 
+        this.entities.depthCharges.splice(i, 1); 
+      }
+    }
+
+    if (this.diver.hp <= 0) { 
+      this.gameState = JSON.parse(JSON.stringify(this.preDiveState));
+      SaveManager.save(this.gameState);
+      
+      // Stop BGM immediately on death
+      if (AudioManager.currentBGM) {
+        AudioManager.currentBGM.pause();
+        AudioManager.currentBGM.currentTime = 0;
+      }
+      AudioManager.playSFX('dive-failure', true);
+      
+      this.isRunning = false;
+      UIManager.showModal("CRITICAL FAILURE", "EMERGENCY BECON ACTIVATED. You were recovered by the rescue crew, but your salvage was lost.", false)
+        .then(() => window.returnToHub()); 
+    }
+  }
+
+  endDive(success) {
+    this.isRunning = false;
+    
+    // 1. Immediately silence the active level music
+    if (AudioManager.currentBGM) {
+      AudioManager.currentBGM.pause();
+      AudioManager.currentBGM.currentTime = 0;
+    }
+    
+    if (success) {
+      AudioManager.playSFX('level_up', true);
+      this.gameState.gold += this.goldThisDive;
+      this.relicsThisDiveArr.forEach(id => {
+        if (!this.gameState.relicsFound[this.activeRegion.id].includes(id)) {
+          this.gameState.relicsFound[this.activeRegion.id].push(id);
+        }
+      });
+      if (!this.gameState.completedRegions.includes(this.activeRegion.id)) {
+        this.gameState.completedRegions.push(this.activeRegion.id);
+      }
+      SaveManager.save(this.gameState); 
+    } else {
+      AudioManager.playSFX('dive-failure', true);
+      // Revert to state prior to dive to wipe un-extracted treasure
+      this.gameState = JSON.parse(JSON.stringify(this.preDiveState));
+      SaveManager.save(this.gameState);
+    }
+    
+    // 2. Wait 1.5 seconds before starting the menu music so the SFX has impact
+    setTimeout(() => {
+      // Only play if the player hasn't somehow already started a new dive
+      if (!this.isRunning) {
+        AudioManager.playMusic('Tide_at_Twilight');
+      }
+    }, 1500);
+    
+    document.getElementById('pauseOverlay').classList.add('hidden');
+    document.getElementById('dom-hud').classList.add('hidden');
+    document.getElementById('hud-depth').classList.add('hidden');
+    
+    const isMaster = this.gameState.completedRegions.length === 5;
+    document.getElementById('certTitle').innerText = isMaster ? " MASTER DIVER CERTIFICATE " : `DIVE LOG: ${this.activeRegion.name.toUpperCase()}`;
+    document.getElementById('certStats').innerHTML = `
+      <strong>Status:</strong> ${success ? "Successfully Extracted to Surface Vessel" : "<span style='color:#ff5252;'>Mission Aborted (Salvage Lost)</span>"}<br>
+      <strong>Relics Secured This Dive:</strong> ${success ? this.relicsThisDive : 0}<br>
+      <strong>Region Relics Total:</strong> ${this.gameState.relicsFound[this.activeRegion.id].length} / 6<br>
+      <strong>Wealth Secured:</strong> ${success ? this.goldThisDive : 0} Gold<br>
+      <strong>Vault Total:</strong> ${this.gameState.gold} Gold
+    `;
+    document.getElementById('certOverlay').classList.remove('hidden');
+  }
 }
-requestAnimationFrame(gameLoop);
 
-function endDive(success) {
-  if (success && !gameState.completedRegions.includes(activeRegion.id)) gameState.completedRegions.push(activeRegion.id);
-  saveState(); diver = null; document.getElementById('pauseOverlay').classList.add('hidden');
-  
-  const isMaster = gameState.completedRegions.length === 5;
-  document.getElementById('certTitle').innerText = isMaster ? " MASTER DIVER CERTIFICATE " : `DIVE LOG: ${activeRegion.name.toUpperCase()}`;
-  document.getElementById('certStats').innerHTML = `
-    <strong>Status:</strong> ${success ? "Successfully Extracted to Surface Vessel" : "Mission Aborted"}<br>
-    <strong>Relics Secured This Dive:</strong> ${relicsThisDive}<br>
-    <strong>Region Relics Total:</strong> ${gameState.relicsFound[activeRegion.id].length} / 6<br>
-    <strong>Total Wealth:</strong> ${gameState.gold} Gold
-  `;
-  document.getElementById('certOverlay').classList.remove('hidden');
+let engine = null;
+
+function totalRelicsFound() {
+  return Object.values(engine.gameState.relicsFound).reduce((acc, arr) => acc + arr.length, 0);
 }
 
-function returnToHub() {
-  diver = null; isPaused = false;
-  document.getElementById('hubOverlay').classList.remove('hidden');
-  document.getElementById('certOverlay').classList.add('hidden');
-  document.getElementById('pauseOverlay').classList.add('hidden');
-  renderHub();
-}
-
-/* -------------------------------------------------------------
- *  8. MENUS & ECONOMY
- * ------------------------------------------------------------- */
 function renderHub() {
-  document.getElementById('goldTracker').innerText = `Salvage Vault: ${gameState.gold} Gold`;
+  document.getElementById('goldTracker').innerText = `Vault: ${engine.gameState.gold} Gold`;
   let grp = document.getElementById('regionButtons'); grp.innerHTML = '';
   REGIONS.forEach(reg => {
     let btn = document.createElement('button');
-    let rels = gameState.relicsFound[reg.id]?.length || 0;
+    let rels = engine.gameState.relicsFound[reg.id]?.length || 0;
     btn.innerHTML = `${reg.name} [${reg.diff}]<br><small>${rels}/6 Relics Found</small>`;
-    btn.onclick = () => { document.getElementById('hubOverlay').classList.add('hidden'); initLevel(reg); };
+    btn.onclick = () => {
+      AudioManager.playSFX('menu-select');
+      // Yield the main thread for 15ms so the browser can start the audio playback 
+      // before we block the CPU with heavy map generation.
+      setTimeout(() => {
+        engine.startLevel(reg);
+      }, 15);
+    };
     grp.appendChild(btn);
   });
 }
 
 function renderShop() {
-  let unspentRelics = totalRelicsFound() - (gameState.spentRelics || 0);
-  document.getElementById('shopGoldDisplay').innerHTML = `Vault Funds: ${gameState.gold} Gold &nbsp;&nbsp;|&nbsp;&nbsp; Unspent Relics: ${unspentRelics}`;
+  let unspentRelics = totalRelicsFound() - (engine.gameState.spentRelics || 0);
+  document.getElementById('shopGoldDisplay').innerHTML = `Vault Funds: ${engine.gameState.gold} Gold &nbsp;&nbsp;|&nbsp;&nbsp; Unspent Relics: ${unspentRelics}`;
   
   let c = document.getElementById('shopItemsContainer'); c.innerHTML = '';
   
   SHOP_ITEMS.forEach(item => {
-    if (item.requires && !gameState.purchasedUpgrades.includes(item.requires)) return;
+    if (item.requires && !engine.gameState.purchasedUpgrades.includes(item.requires)) return;
 
-    let owned = gameState.purchasedUpgrades.includes(item.id);
-    let canAfford = gameState.gold >= item.costGold && unspentRelics >= item.costRelics;
+    let owned = engine.gameState.purchasedUpgrades.includes(item.id);
+    let canAfford = engine.gameState.gold >= item.costGold && unspentRelics >= item.costRelics;
 
     let btnText = owned ? 'OWNED' : 'BUY';
     if (item.type === 'suit') {
-      if (gameState.activeSuit === item.id) btnText = 'EQUIPPED';
+      if (engine.gameState.activeSuit === item.id) btnText = 'EQUIPPED';
       else if (owned) btnText = 'EQUIP';
     }
 
@@ -876,48 +1335,120 @@ function renderShop() {
     if (item.costGold === 0 && item.costRelics === 0 && !owned) costText = "Free";
     if (owned && item.type !== 'suit') costText = "Acquired";
 
-    let btnDisabled = false;
-    if (owned && item.type !== 'suit') btnDisabled = true;
-    if (!owned && !canAfford) btnDisabled = true;
-    if (item.type === 'suit' && gameState.activeSuit === item.id) btnDisabled = true;
+    let btnDisabled = (owned && item.type !== 'suit') || (!owned && !canAfford) || (item.type === 'suit' && engine.gameState.activeSuit === item.id);
 
+    // Apply inline styles to mimic disabled state, rather than using the 'disabled' attribute
     let html = `
       <div class="shop-item">
         <div>
-          <strong>${item.name}</strong><br>
+          <strong style="color: #38ef7d">${item.name}</strong><br>
           <small style="color:#90a4ae">Cost: ${costText}</small>
         </div>
-        <button id="b-${item.id}" ${btnDisabled ? 'disabled' : ''}>${btnText}</button>
+        <button id="b-${item.id}" style="${btnDisabled ? 'border-color: #455a64; color: #546e7a; cursor: not-allowed; background: #07121e;' : ''}">${btnText}</button>
       </div>`;
       
     c.insertAdjacentHTML('beforeend', html);
     
     let btn = document.getElementById(`b-${item.id}`);
-    if (btn && !btnDisabled) {
+    if (btn) {
       btn.onclick = () => { 
-        if (owned && item.type === 'suit') {
-          gameState.activeSuit = item.id;
-        } else if (!owned) {
-          gameState.gold -= item.costGold; 
-          gameState.spentRelics += item.costRelics;
-          gameState.purchasedUpgrades.push(item.id); 
-          if (item.type === 'suit') gameState.activeSuit = item.id;
+        if (btnDisabled) {
+          AudioManager.playSFX('menu-error');
+          return;
         }
-        saveState(); 
+        if (owned && item.type === 'suit') {
+          AudioManager.playSFX('menu-select');
+          engine.gameState.activeSuit = item.id;
+        } else if (!owned) {
+          AudioManager.playSFX('update-success');
+          engine.gameState.gold -= item.costGold; 
+          engine.gameState.spentRelics += item.costRelics;
+          engine.gameState.purchasedUpgrades.push(item.id); 
+          if (item.type === 'suit') engine.gameState.activeSuit = item.id;
+        }
+        SaveManager.save(engine.gameState); 
         renderShop(); 
       };
     }
   });
 }
 
-document.getElementById('openShopBtn').onclick = () => { document.getElementById('hubOverlay').classList.add('hidden'); document.getElementById('shopOverlay').classList.remove('hidden'); renderShop(); };
-document.getElementById('closeShopBtn').onclick = () => { document.getElementById('shopOverlay').classList.add('hidden'); returnToHub(); };
-document.getElementById('resumeBtn').onclick = () => { isPaused = false; document.getElementById('pauseOverlay').classList.add('hidden'); };
-document.getElementById('abortBtn').onclick = () => { endDive(true); };
-document.getElementById('claimCertBtn').onclick = returnToHub;
-document.getElementById('resetDataBtn').onclick = () => { if(confirm("Wipe all data?")) { localStorage.removeItem('abyssal_save_v13'); loadSave(); renderHub(); } };
+window.returnToHub = function() {
+  AudioManager.playMusic('Tide_at_Twilight');
+  document.getElementById('hubOverlay').classList.remove('hidden');
+  document.getElementById('certOverlay').classList.add('hidden');
+  document.getElementById('pauseOverlay').classList.add('hidden');
+  document.getElementById('shopOverlay').classList.add('hidden');
+  document.getElementById('dom-hud').classList.add('hidden');
+  document.getElementById('hud-depth').classList.add('hidden');
+  renderHub();
+}
 
-loadSave(); renderHub();
+async function boot() {
+  InputManager.init(document.getElementById('gameCanvas'));
+  await AssetManager.init();
+  AudioManager.init(); // Initialize audio
+  
+  engine = new GameEngine();
+  
+  document.getElementById('openShopBtn').onclick = () => { 
+    AudioManager.playSFX('menu-select');
+    document.getElementById('hubOverlay').classList.add('hidden'); 
+    document.getElementById('shopOverlay').classList.remove('hidden'); 
+    renderShop(); 
+  };
+  document.getElementById('closeShopBtn').onclick = () => {
+    AudioManager.playSFX('menu-select');
+    window.returnToHub();
+  };
+  document.getElementById('resumeBtn').onclick = () => { 
+    AudioManager.playSFX('menu-select');
+    AudioManager.setMusicVolume(0.4); 
+    engine.isPaused = false; 
+    document.getElementById('pauseOverlay').classList.add('hidden'); 
+  };
+  document.getElementById('abortBtn').onclick = () => { 
+    AudioManager.playSFX('menu-select');
+    // Delay the dive termination by 150ms so the menu sound plays clearly first
+    setTimeout(() => {
+      engine.endDive(false); 
+    }, 150);
+  };
+  document.getElementById('claimCertBtn').onclick = () => {
+    AudioManager.playSFX('menu-select');
+    window.returnToHub();
+  };
+  
+  document.getElementById('resetDataBtn').onclick = () => {
+    AudioManager.playSFX('menu-select');
+    UIManager.showModal("WIPE CAREER DATA", "Are you sure you want to permanently delete all progress, upgrades, and gold? This cannot be undone.", true)
+      .then(confirmed => {
+        if (confirmed) {
+          AudioManager.playSFX('long-explosion');
+          localStorage.removeItem('abyssal_save_v18_refactored');
+          localStorage.removeItem('abyssal_save_v18');
+          engine.gameState = SaveManager.load();
+          SaveManager.save(engine.gameState);
+          renderHub();
+        }
+      });
+  };
+
+  renderHub();
+
+  // Create a one-time global listener to bypass browser autoplay restrictions
+  const startAudioOnInteraction = () => {
+    AudioManager.playMusic('Tide_at_Twilight');
+    // Remove the listeners so this only triggers once
+    window.removeEventListener('click', startAudioOnInteraction);
+    window.removeEventListener('keydown', startAudioOnInteraction);
+  };
+  
+  window.addEventListener('click', startAudioOnInteraction);
+  window.addEventListener('keydown', startAudioOnInteraction);
+}
+
+window.onload = boot;
 </script>
 </body>
 </html>
